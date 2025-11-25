@@ -1,0 +1,1632 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/robotnik/summit_xl_steel/protos/SummitXlSteel.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation -0.5773502691896258 0.5773502691896258 0.5773502691896258 2.0944
+  position 7.196223167444359e-05 7.19624351415149e-05 279.9462369309109
+}
+TexturedBackground {
+  texture "noon_sunny_empty"
+}
+TexturedBackgroundLight {
+}
+DEF FG_Top Group {
+  children [
+    DEF Floor Group {
+      children [
+        Solid {
+          translation -20.22 42.05 0.05
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.75 0.75 0.75
+                roughness 0.7
+                metalness 0
+              }
+              geometry Box {
+                size 172.3 85.1 0.1
+              }
+            }
+          ]
+          name "FG_Top_Floor"
+          boundingObject Box {
+            size 172.3 85.1 0.1
+          }
+        }
+      ]
+    }
+    DEF Walls Group {
+      children [
+        Solid {
+          translation -20.22 84.55 2.05
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.25 0.25 0.28
+                roughness 0.9
+                metalness 0
+              }
+              geometry Box {
+                size 172.3 0.1 4
+              }
+            }
+          ]
+          name "FG_Top_Walls_1"
+          boundingObject Box {
+            size 172.3 0.1 4
+          }
+        }
+        Solid {
+          translation 65.95 42.05 2.05
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.25 0.25 0.28
+                roughness 0.9
+                metalness 0
+              }
+              geometry Box {
+                size 0.1 85.1 4
+              }
+            }
+          ]
+          name "FG_Top_Walls_2"
+          boundingObject Box {
+            size 0.1 85.1 4
+          }
+        }
+        Solid {
+          translation -106.35 42.05 2.05
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.25 0.25 0.28
+                roughness 0.9
+                metalness 0
+              }
+              geometry Box {
+                size 0.1 85.1 4
+              }
+            }
+          ]
+          name "FG_Top_Walls_3"
+          boundingObject Box {
+            size 0.1 85.1 4
+          }
+        }
+      ]
+    }
+    DEF RackA Group {
+      children [
+        Solid {
+          translation 58.26 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 4.35 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_1"
+          boundingObject Box {
+            size 4.35 37 2
+          }
+        }
+        Solid {
+          translation 49.84 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_2"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation 39.24 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_3"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation 28.64 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_4"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation 18.04 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_5"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation 7.44 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_6"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -3.16 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_7"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -13.76 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_8"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -24.36 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_9"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -34.96 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_10"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -45.56 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_11"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -56.16 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_12"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -66.76 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_13"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -77.36 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_14"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -87.96 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_15"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -98.56 64 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowA_16"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+      ]
+    }
+    DEF RackB Group {
+      children [
+        Solid {
+          translation 62.98 17.1 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 4.35 31.7 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowB_1"
+          boundingObject Box {
+            size 4.35 31.7 2
+          }
+        }
+        Solid {
+          translation 54.58 17.1 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowB_2"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation 43.98 17.1 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowB_3"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation 33.38 17.1 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowB_4"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation 22.78 17.1 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowB_5"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation 12.18 17.1 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowB_6"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation 1.58 17.1 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowB_7"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation -9.02 17.1 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowB_8"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation -19.62 17.1 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowB_9"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation -30.22 17.1 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowB_10"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation -40.82 17.1 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowB_11"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation -51.42 17.1 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowB_12"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation -62.02 17.1 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowB_13"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+      ]
+    }
+    DEF RackR Group {
+      children [
+        Solid {
+          translation -98.8 12.63 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 5.1 15.3 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowR_1"
+          boundingObject Box {
+            size 5.1 15.3 2
+          }
+        }
+        Solid {
+          translation -92.6 12.63 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 5.1 15.3 2
+              }
+            }
+          ]
+          name "FG_Top_RackRowR_2"
+          boundingObject Box {
+            size 5.1 15.3 2
+          }
+        }
+      ]
+    }
+  ]
+}
+DEF FG_Middle Group {
+  children [
+    DEF Floor Group {
+      children [
+        Solid {
+          translation -7.92 -30.05 0.05
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.75 0.75 0.75
+                roughness 0.7
+                metalness 0
+              }
+              geometry Box {
+                size 196.9 59.1 0.1
+              }
+            }
+          ]
+          name "FG_Middle_Floor"
+          boundingObject Box {
+            size 196.9 59.1 0.1
+          }
+        }
+      ]
+    }
+    DEF Walls Group {
+      children [
+        Solid {
+          translation 78.3 -0.5 2.05
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.25 0.25 0.28
+                roughness 0.9
+                metalness 0
+              }
+              geometry Box {
+                size 24.6 0.1 4
+              }
+            }
+          ]
+          name "FG_Middle_Walls_1"
+          boundingObject Box {
+            size 24.6 0.1 4
+          }
+        }
+        Solid {
+          translation 90.53 -30.05 2.05
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.25 0.25 0.28
+                roughness 0.9
+                metalness 0
+              }
+              geometry Box {
+                size 0.1 59.1 4
+              }
+            }
+          ]
+          name "FG_Middle_Walls_2"
+          boundingObject Box {
+            size 0.1 59.1 4
+          }
+        }
+        Solid {
+          translation -106.42 -30.05 2.05
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.25 0.25 0.28
+                roughness 0.9
+                metalness 0
+              }
+              geometry Box {
+                size 0.1 59.1 4
+              }
+            }
+          ]
+          name "FG_Middle_Walls_3"
+          boundingObject Box {
+            size 0.1 59.1 4
+          }
+        }
+      ]
+    }
+    DEF Rack Group {
+      children [
+        Solid {
+          translation 80.78 -20.15 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRow_1"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation 70.18 -20.15 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRow_2"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation 59.58 -20.15 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRow_3"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation 48.98 -20.15 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRow_4"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation 38.38 -20.15 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRow_5"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation 27.78 -20.15 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRow_6"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation 17.18 -20.15 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRow_7"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation 6.58 -20.15 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRow_8"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -4.02 -20.15 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRow_9"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -14.62 -20.15 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRow_10"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -25.22 -20.15 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRow_11"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -35.82 -20.15 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRow_12"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -46.42 -20.15 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRow_13"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+        Solid {
+          translation -57.02 -20.15 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 37 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRow_14"
+          boundingObject Box {
+            size 8.7 37 2
+          }
+        }
+      ]
+    }
+    DEF RackR Group {
+      children [
+        Solid {
+          translation 86.28 -51.2 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 5.1 15.3 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRowR_1"
+          boundingObject Box {
+            size 5.1 15.3 2
+          }
+        }
+        Solid {
+          translation 80.08 -51.2 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 5.1 15.3 2
+              }
+            }
+          ]
+          name "FG_Middle_RackRowR_2"
+          boundingObject Box {
+            size 5.1 15.3 2
+          }
+        }
+      ]
+    }
+  ]
+}
+DEF FG_Bottom Group {
+  children [
+    DEF Floor Group {
+      children [
+        Solid {
+          translation 0 -72.1 0.05
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.75 0.75 0.75
+                roughness 0.7
+                metalness 0
+              }
+              geometry Box {
+                size 212.8 25 0.1
+              }
+            }
+          ]
+          name "FG_Bottom_Floor"
+          boundingObject Box {
+            size 212.8 25 0.1
+          }
+        }
+      ]
+    }
+    DEF Walls Group {
+      children [
+        Solid {
+          translation 98.48 -59.6 2.05
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.25 0.25 0.28
+                roughness 0.9
+                metalness 0
+              }
+              geometry Box {
+                size 15.9 0.1 4
+              }
+            }
+          ]
+          name "FG_Bottom_Walls_1"
+          boundingObject Box {
+            size 15.9 0.1 4
+          }
+        }
+        Solid {
+          translation 106.4 -72.1 2.05
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.25 0.25 0.28
+                roughness 0.9
+                metalness 0
+              }
+              geometry Box {
+                size 0.1 25 4
+              }
+            }
+          ]
+          name "FG_Bottom_Walls_2"
+          boundingObject Box {
+            size 0.1 25 4
+          }
+        }
+        Solid {
+          translation -106.42 -72.1 2.05
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.25 0.25 0.28
+                roughness 0.9
+                metalness 0
+              }
+              geometry Box {
+                size 0.1 25 4
+              }
+            }
+          ]
+          name "FG_Bottom_Walls_3"
+          boundingObject Box {
+            size 0.1 25 4
+          }
+        }
+        Solid {
+          translation 0 -84.6 2.05
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.25 0.25 0.28
+                roughness 0.9
+                metalness 0
+              }
+              geometry Box {
+                size 212.8 0.1 4
+              }
+            }
+          ]
+          name "FG_Bottom_Walls_4"
+          boundingObject Box {
+            size 212.8 0.1 4
+          }
+        }
+      ]
+    }
+    DEF Rack Group {
+      children [
+        Solid {
+          translation -81.4 -66.7 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Bottom_RackRow_1"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation -70.8 -66.7 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Bottom_RackRow_2"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation -60.2 -66.7 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Bottom_RackRow_3"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation -49.6 -66.7 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Bottom_RackRow_4"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation -39 -66.7 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Bottom_RackRow_5"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation -28.4 -66.7 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Bottom_RackRow_6"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation -17.8 -66.7 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Bottom_RackRow_7"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+        Solid {
+          translation -7.2 -66.7 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 8.7 31.7 2
+              }
+            }
+          ]
+          name "FG_Bottom_RackRow_8"
+          boundingObject Box {
+            size 8.7 31.7 2
+          }
+        }
+      ]
+    }
+    DEF RackR Group {
+      children [
+        Solid {
+          translation -100.85 -71.7 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 5.1 15.3 2
+              }
+            }
+          ]
+          name "FG_Bottom_RackRowR_1"
+          boundingObject Box {
+            size 5.1 15.3 2
+          }
+        }
+        Solid {
+          translation -94.65 -71.7 1
+          children [
+            Shape {
+              appearance PBRAppearance {
+                baseColor 0.85 0.55 0.15
+                roughness 0.6
+                metalness 0.3
+              }
+              geometry Box {
+                size 5.1 15.3 2
+              }
+            }
+          ]
+          name "FG_Bottom_RackRowR_2"
+          boundingObject Box {
+            size 5.1 15.3 2
+          }
+        }
+      ]
+    }
+  ]
+}
+DEF FG_PalletizingConveyors Group {
+  children [
+    Solid {
+      translation 23.02 -81.28 0.5
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.7 0.7 0.72
+            roughness 0.35
+            metalness 0.7
+          }
+          geometry Box {
+            size 30.1 2.17 1
+          }
+        }
+      ]
+      name "FG_PalletizingConveyors_1A"
+      boundingObject Box {
+        size 30.1 2.17 1
+      }
+    }
+    Solid {
+      translation 9.06 -83.48 0.5
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.7 0.7 0.72
+            roughness 0.35
+            metalness 0.7
+          }
+          geometry Box {
+            size 2.17 2.24 1
+          }
+        }
+      ]
+      name "FG_PalletizingConveyors_1B"
+      boundingObject Box {
+        size 2.17 2.24 1
+      }
+    }
+    Solid {
+      translation 55.75 -81.1 0.5
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.7 0.7 0.72
+            roughness 0.35
+            metalness 0.7
+          }
+          geometry Box {
+            size 32.19 2.17 1
+          }
+        }
+      ]
+      name "FG_PalletizingConveyors_2A"
+      boundingObject Box {
+        size 32.19 2.17 1
+      }
+    }
+    Solid {
+      translation 70.76 -83.39 0.5
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.7 0.7 0.72
+            roughness 0.35
+            metalness 0.7
+          }
+          geometry Box {
+            size 2.17 2.42 1
+          }
+        }
+      ]
+      name "FG_PalletizingConveyors_2B"
+      boundingObject Box {
+        size 2.17 2.42 1
+      }
+    }
+    Solid {
+      translation 90.37 -81.1 0.5
+      children [
+        Shape {
+          appearance PBRAppearance {
+            baseColor 0.7 0.7 0.72
+            roughness 0.35
+            metalness 0.7
+          }
+          geometry Box {
+            size 32.1 2.17 1
+          }
+        }
+      ]
+      name "FG_PalletizingConveyors_3"
+      boundingObject Box {
+        size 32.1 2.17 1
+      }
+    }
+  ]
+}
+SummitXlSteel {
+  hidden translation_7 0.21944802398299348 -0.20449996661010172 -0.0009138265540483847
+  hidden rotation_7 -0.4659043590258512 0.6256717399590418 -0.6256740381838901 4.013591830169734
+  hidden translation_8 0.21944968039942317 0.20450003337390876 -0.0009133299124099658
+  hidden rotation_8 -0.46590444490298366 0.625671707985096 -0.6256740062098277 4.0135919712908645
+  hidden translation_9 -0.22550604136554117 0.2045000329443426 -0.0009000501617586078
+  hidden rotation_9 -0.46590718057323066 0.6256706894309492 -0.6256729876519392 4.013596466788689
+  hidden translation_10 -0.22550769769797968 -0.20449996703966933 -0.0009005470839319063
+  hidden rotation_10 -0.4659070607878077 0.6256707340300294 -0.6256730322511833 4.013596269946775
+  translation 5.551004479986579 41.99995129259294 0.1952630547116069
+  rotation -0.0015764810861591864 -0.9999892249198864 -0.004366320133691725 0.0017723885036786584
+  name "AGV_1"
+  controller "ss_controller"
+}
+SummitXlSteel {
+  hidden translation_7 0.22200470819899806 -0.20449996661010172 -0.003147113377545693
+  hidden rotation_7 0.05530895414638852 -0.7060231078451891 0.7060257012176349 3.0310877401574903
+  hidden translation_8 0.2220049775492053 0.20450003337390876 -0.0031454052151949166
+  hidden rotation_8 0.05530890493346569 -0.7060231097728201 0.7060257031452729 3.0310878382828035
+  hidden translation_9 -0.22298711428687137 0.2045000329443426 -0.0030998539734239357
+  hidden rotation_9 0.055226665622362704 -0.7060263286175494 0.7060289220018257 3.031251815431628
+  hidden translation_10 -0.22298738309100463 -0.20449996703966933 -0.0031015622217542417
+  hidden rotation_10 0.05522670257958569 -0.7060263271721235 0.7060289205563945 3.031251741742204
+  translation 5.552356943639088 35.85454897289752 0.19632298736908585
+  rotation -0.0014191918104165854 -0.999992558953504 -0.0035871900183360073 0.002829142163390262
+  name "AGV_2"
+  controller "ss_controller"
+}
+SummitXlSteel {
+  hidden translation_7 0.22200470819899806 -0.20449996661010172 -0.003147113377545693
+  hidden rotation_7 0.05530895414638852 -0.7060231078451891 0.7060257012176349 3.0310877401574903
+  hidden translation_8 0.2220049775492053 0.20450003337390876 -0.0031454052151949166
+  hidden rotation_8 0.05530890493346569 -0.7060231097728201 0.7060257031452729 3.0310878382828035
+  hidden translation_9 -0.22298711428687137 0.2045000329443426 -0.0030998539734239357
+  hidden rotation_9 0.055226665622362704 -0.7060263286175494 0.7060289220018257 3.031251815431628
+  hidden translation_10 -0.22298738309100463 -0.20449996703966933 -0.0031015622217542417
+  hidden rotation_10 0.05522670257958569 -0.7060263271721235 0.7060289205563945 3.031251741742204
+  translation 5.55236 -0.210051 0.196324
+  rotation -0.0014191918100641583 -0.999992558953545 -0.0035871900070976732 0.0028291421633917127
+  name "AGV_3"
+  controller "ss_controller"
+}
+SummitXlSteel {
+  hidden translation_7 0.22200470819899806 -0.20449996661010172 -0.003147113377545693
+  hidden rotation_7 0.05530895414638852 -0.7060231078451891 0.7060257012176349 3.0310877401574903
+  hidden translation_8 0.2220049775492053 0.20450003337390876 -0.0031454052151949166
+  hidden rotation_8 0.05530890493346569 -0.7060231097728201 0.7060257031452729 3.0310878382828035
+  hidden translation_9 -0.22298711428687137 0.2045000329443426 -0.0030998539734239357
+  hidden rotation_9 0.055226665622362704 -0.7060263286175494 0.7060289220018257 3.031251815431628
+  hidden translation_10 -0.2229873830910046 -0.20449996703966933 -0.003101562221754245
+  hidden rotation_10 0.055226702579583155 -0.7060263271721237 0.7060289205563947 3.0312517417422087
+  translation 5.552356943639087 -42.00005102710248 0.19632298736908577
+  rotation -0.001419191809589084 -0.9999925589535079 -0.003587190017590173 0.0028291421633929214
+  name "AGV_4"
+  controller "ss_controller"
+}
+SummitXlSteel {
+  translation -5.55229 -48 0.196323
+  rotation 0.001414570232549213 -2.002819218655985e-06 0.9999989994930226 3.141589242213577
+  name "AGV_5"
+  controller "ss_controller"
+}
+SummitXlSteel {
+  translation -74 -36.0976 0.196323
+  rotation 0.0014125582982903017 -0.001416568677381541 0.9999979990041161 1.5707915190490218
+  name "AGV_6"
+  controller "ss_controller"
+}
+SummitXlSteel {
+  translation -80.51 27.7323 0.196323
+  rotation -0.0014165599986232906 -0.0014125499986271878 0.9999979990281339 0
+  name "AGV_7"
+  controller "ss_controller"
+}
+SummitXlSteel {
+  translation 76.37 -78.028 0.196323
+  rotation -0.001412559998587215 0.0014165699985832043 -0.9999979989998428 -1.5707953071795862
+  name "AGV_8"
+  controller "ss_controller"
+}
+SummitXlSteel {
+  translation 36.7 -78.5377 0.196323
+  rotation 0 0 1 1.5708
+  name "AGV_9"
+  controller "ss_controller"
+}
+SummitXlSteel {
+  translation 41.0496 -78.5278 0.196323
+  rotation 0.0014125582982903017 -0.001416568677381541 0.9999979990041161 1.5707915190490218
+  name "AGV_10"
+  controller "ss_controller"
+}
+SummitXlSteel {
+  translation 22.3197 -78.5978 0.196323
+  rotation 0.0014125582982903017 -0.001416568677381541 0.9999979990041161 1.5707915190490218
+  name "AGV_11"
+  controller "ss_controller"
+}
+SummitXlSteel {
+  translation 55.7199 -78.4077 0.196323
+  rotation 0.0014125582982903017 -0.001416568677381541 0.9999979990041161 1.5707915190490218
+  name "AGV_12"
+  controller "ss_controller"
+}
+SummitXlSteel {
+  translation 90.39 -77.7984 0.196323
+  rotation 0.0014125582982903017 -0.001416568677381541 0.9999979990041161 1.5707915190490218
+  name "AGV_13"
+  controller "ss_controller"
+}
+SummitXlSteel {
+  translation -97.77 -60.5476 0.0625805
+  rotation 0.0014125582982903017 -0.001416568677381541 0.9999979990041161 1.5707915190490218
+  name "AGV_14"
+  controller "ss_controller"
+}
+SummitXlSteel {
+  translation 87.79 -3.608 0.224418
+  rotation -0.0014165599986232906 -0.0014125499986271878 0.9999979990281339 -1.5708053071795867
+  name "AGV_15"
+  controller "ss_controller"
+}

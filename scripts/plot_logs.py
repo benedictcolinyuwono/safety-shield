@@ -22,9 +22,6 @@ def plot(csv_path="data/logs/carla_rearend_numeric.csv"):
     plt.legend()
     plt.show()
 
-#if __name__ == "__main__":
-#    plot()
-
 def plot_agv(csv_path="data/logs/agv_queue_numeric.csv"):
     import pandas as pd
     import matplotlib.pyplot as plt
@@ -44,10 +41,6 @@ def plot_agv(csv_path="data/logs/agv_queue_numeric.csv"):
     plt.show()
 
 if __name__ == "__main__":
-    # try:
-    #     plot()      # rear-end plots (blocked by plt.show)
-    # except Exception:
-    #     pass
     try:
         plot_agv()  # AGV positions + headway
     except Exception as e:

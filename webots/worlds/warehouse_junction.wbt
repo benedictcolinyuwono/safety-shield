@@ -3,13 +3,12 @@
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackground.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
 EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/objects/floors/protos/RectangleArena.proto"
-EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/projects/robots/adept/pioneer3/protos/Pioneer3dx.proto"
 
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.5773502691896258 0.5773502691896258 0.5773502691896258 2.0944
-  position -4.414154566648529e-06 -4.41416705129723e-06 3.7731705391120145
+  orientation -0.25344469050408575 0.2490496625893725 0.9347406348391022 1.6556848629450767
+  position 0.0421770039781535 -2.928967650051998 1.9801683787389694
 }
 TexturedBackground {
 }
@@ -17,27 +16,4 @@ TexturedBackgroundLight {
 }
 RectangleArena {
   floorSize 2 2
-}
-Pioneer3dx {
-  translation -0.6 0.1 0.4
-  rotation 0 1 0 0
-  controller "ss_controller"
-}
-Pioneer3dx {
-  translation -0.2 0.1 0.4
-  rotation 0 1 0 0
-  name "Pioneer 3-DX(1)"
-  controller "ss_controller"
-}
-Pioneer3dx {
-  translation 0.2 0.1 0.4
-  rotation 0 1 0 0
-  name "Pioneer 3-DX(2)"
-  controller "ss_controller"
-}
-Pioneer3dx {
-  translation 0.6 0.1 0.4
-  rotation 0 1 0 0
-  name "Pioneer 3-DX(3)"
-  controller "ss_controller"
 }
