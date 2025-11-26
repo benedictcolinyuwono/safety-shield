@@ -14,10 +14,8 @@ def limit_velocity(v_cmd, ttc_s, headway_s, v_max):
     
     return max(v_limited, 0.0)
 
-
 def limit_angular_velocity(w_cmd, w_max):
     return max(min(w_cmd, w_max), -w_max)
-
 
 limit_speed = limit_velocity
 limit_turn = limit_angular_velocity

@@ -8,7 +8,6 @@ PASS = MODE_PASS
 GUARDED = MODE_GUARDED
 SAFE = MODE_EMERGENCY
 
-
 def supervise_commands(state, commanded_velocities, risk_assessment):
     v_cmd, w_cmd = commanded_velocities
     
