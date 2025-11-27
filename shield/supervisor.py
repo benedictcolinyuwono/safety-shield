@@ -20,5 +20,3 @@ def supervise_commands(state, commanded_velocities, risk_assessment):
         return GUARDED, (v_safe, 0.0)
 
     return PASS, (v_cmd, w_cmd)
-
-supervise = supervise_commands
