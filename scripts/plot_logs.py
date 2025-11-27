@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 def plot_rear_end(csv_path="data/logs/carla_rearend_numeric.csv"):
     df = pd.read_csv(csv_path)
-    mode_map = {"PASS": 0, "GUARDED": 1, "SAFE": 2, "EMERGENCY": 2}
+    mode_map = {"PASS": 0, "GUARDED": 1, "EMERGENCY": 2}
     df["mode_int"] = df["mode"].map(mode_map)
     
     plt.figure(figsize=(10, 4))
@@ -55,9 +55,6 @@ def plot_agv(csv_path="data/logs/agv_queue_numeric.csv"):
     plt.grid(True)
     
     plt.show()
-
-
-plot = plot_rear_end
 
 
 if __name__ == "__main__":

@@ -21,7 +21,3 @@ def step_with_reservations(agvs: List[AGV], reservations: Set[int]) -> List[AGV]
             agv = AGV(agv.id, next_cell, agv.goal)
         updated_agvs.append(agv)
     return updated_agvs
-
-
-occupied_cells = get_occupied_cells
-step_grid = step_with_reservations

@@ -4,6 +4,3 @@ def euler_step_1d(ego_x, ego_v, lead_x, lead_v, a_ego, a_lead, dt=0.1):
     new_ego_x = ego_x + new_ego_v * dt
     new_lead_x = lead_x + new_lead_v * dt
     return new_ego_x, new_ego_v, new_lead_x, new_lead_v
-
-
-step_1d = euler_step_1d

@@ -1,7 +1,7 @@
 import csv
 import math
 from shield.risk import assess_collision_risk
-from shield.supervisor import supervise_commands, MODE_PASS
+from shield.supervisor import supervise_commands, PASS
 from sims.rear_end_numeric import euler_step_1d
 
 DT = 0.1
@@ -21,7 +21,7 @@ def run(output_csv="data/logs/carla_rearend_numeric.csv"):
     t = 0.0
     ego_x, ego_v = EGO_START_X, EGO_START_V
     lead_x, lead_v = LEAD_START_X, LEAD_START_V
-    mode = MODE_PASS
+    mode = PASS
     
     with open(output_csv, "w", newline="") as f:
         writer = csv.writer(f)

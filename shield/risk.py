@@ -27,7 +27,3 @@ def assess_collision_risk(state):
         "margin_low": (ttc < WARNING_THRESHOLD or headway < WARNING_THRESHOLD),
         "violation_predicted": (ttc < CRITICAL_THRESHOLD or headway < CRITICAL_THRESHOLD),
     }
-
-ttc = time_to_collision
-headway = time_headway
-pack_risk = assess_collision_risk
