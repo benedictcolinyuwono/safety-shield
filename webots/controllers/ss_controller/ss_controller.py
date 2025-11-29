@@ -1,9 +1,8 @@
-# Import libraries
-from controller import Robot
+from controller import Robot, Supervisor
 import math
 
-# Initialize robot
-robot = Robot()
+# Initialize robot as Supervisor (can see other AGVs)
+robot = Supervisor()
 timestep = int(robot.getBasicTimeStep())
 robot_name = robot.getName()
 
@@ -31,14 +30,33 @@ compass.enable(timestep)
 BASE_SPEED = 15.0
 WAYPOINT_THRESHOLD = 0.5  # meters - how close to consider "reached"
 
-# Define a simple waypoint to test
-target_waypoint_x = 10.0
-target_waypoint_y = 40.0
+waypoint_goals = {
+    'AGV_1': (10.0, 42.0),
+    'AGV_2': (10.0, 36.0),
+    'AGV_3': (10.0, -0.31),
+    'AGV_4': (10.0, -40.0),
+    'AGV_5': (10.0, -46.0),
+    'AGV_6': (88.0, -10.0),
+    'AGV_7': (13.0, -70.0),
+    'AGV_8': (32.0, -70.0),
+    'AGV_9': (45.0, -70.0),
+    'AGV_10': (65.0, -70.0),
+    'AGV_11': (83.0, -70.0),
+    'AGV_12': (-80.0, 42.0),
+    'AGV_13': (-85.0, -46.0),
+    'AGV_14': (70.0, 36.0),
+    'AGV_15': (-100.0, -57.0),
+}
 
-print(f"{robot_name} starting navigation to waypoint ({target_waypoint_x}, {target_waypoint_y})")
+# Get my waypoint
+target_waypoint_x, target_waypoint_y = waypoint_goals[robot_name]
+
+print(f"{robot_name} starting at ({gps.getValues()[0]:.2f}, {gps.getValues()[1]:.2f})")
+print(f"{robot_name} navigating to waypoint ({target_waypoint_x}, {target_waypoint_y})")
 
 # Main control loop
 while robot.step(timestep) != -1:
+    # ========== SENSE: Read my own state ==========
     # Read GPS position
     gps_values = gps.getValues()
     current_x = gps_values[0]
@@ -50,7 +68,25 @@ while robot.step(timestep) != -1:
     compass_y = compass_values[1]
     current_heading = math.atan2(compass_y, compass_x)
     
-    # Calculate vector to waypoint
+    # ========== SENSE: Read other AGVs' positions ==========
+    other_agvs = []
+    for i in range(1, 16):
+        agv_name = f"AGV_{i}"
+        if agv_name == robot_name:
+            continue  # Skip myself
+        
+        # Get node handle for this AGV
+        agv_node = robot.getFromDef(agv_name)
+        if agv_node is not None:
+            position = agv_node.getPosition()
+            other_agvs.append({
+                'name': agv_name,
+                'x': position[0],
+                'y': position[1],
+                'z': position[2]
+            })
+    
+    # ========== NAVIGATE: Calculate vector to waypoint ==========
     delta_x = target_waypoint_x - current_x
     delta_y = target_waypoint_y - current_y
     distance_to_waypoint = math.sqrt(delta_x * delta_x + delta_y * delta_y)
@@ -88,9 +124,11 @@ while robot.step(timestep) != -1:
         angular_velocity_command = -max_angular_velocity
     
     # Convert to differential drive commands
-    # For mecanum: left side positive forward, right side positive forward
-    # Turning: left side slower/backward, right side faster/forward
     linear_velocity_command = BASE_SPEED * 0.5  # Slower while navigating
+    
+    # TODO: Add collision detection here (next step)
+    # TODO: Add safety shield integration here (next step)
+    # For now, just navigate without collision avoidance
     
     left_velocity = linear_velocity_command - angular_velocity_command
     right_velocity = linear_velocity_command + angular_velocity_command
