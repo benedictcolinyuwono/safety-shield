@@ -7,8 +7,8 @@ EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2025a/project
 WorldInfo {
 }
 Viewpoint {
-  orientation -0.5773502691896258 0.5773502691896258 0.5773502691896258 2.0944
-  position -15.34765382641886 -2.0852383853508307 337.96696041679513
+  orientation -0.5785529348757699 0.5771083513998978 0.5763874151047412 2.098006783115591
+  position -15.347609665979626 -2.110482092367514 331.24040048561284
 }
 TexturedBackground {
   texture "noon_sunny_empty"
@@ -1515,89 +1515,104 @@ DEF AGV Group {
       translation 5.55 42 0.23
       name "AGV_1"
       controller "ss_controller"
+      supervisor TRUE
     }
     SummitXlSteel {
       translation 5.65 36.26 0.23
       rotation 0 0 1 3.14159
       name "AGV_2"
       controller "ss_controller"
+      supervisor TRUE
     }
     SummitXlSteel {
       translation 5.75 -0.31 0.23
       rotation 0 0 1 -5.307179586466759e-06
       name "AGV_3"
       controller "ss_controller"
+      supervisor TRUE
     }
     SummitXlSteel {
       translation 5.85 -40.99 0.23
       name "AGV_4"
       controller "ss_controller"
+      supervisor TRUE
     }
     SummitXlSteel {
       translation 5.95 -46.12 0.23
       rotation 0 0 1 3.14159
       name "AGV_5"
       controller "ss_controller"
+      supervisor TRUE
     }
     SummitXlSteel {
       translation 88.06 -4.12 0.23
       rotation 0 0 1 -1.5707953071795862
       name "AGV_6"
       controller "ss_controller"
+      supervisor TRUE
     }
     SummitXlSteel {
       translation 13.48 -77.99 0.23
       rotation 0 0 1 1.5708
       name "AGV_7"
       controller "ss_controller"
+      supervisor TRUE
     }
     SummitXlSteel {
       translation 32.65 -78.02 0.23
       rotation 0 0 1 1.5708
       name "AGV_8"
       controller "ss_controller"
+      supervisor TRUE
     }
     SummitXlSteel {
       translation 45.38 -78.12 0.23
       rotation 0 0 1 1.5708
       name "AGV_9"
       controller "ss_controller"
+      supervisor TRUE
     }
     SummitXlSteel {
       translation 64.92 -77.89 0.23
       rotation 0 0 1 1.5708
       name "AGV_10"
       controller "ss_controller"
+      supervisor TRUE
     }
     SummitXlSteel {
       translation 83.02 -77.79 0.23
       rotation 0 0 1 1.5708
       name "AGV_11"
       controller "ss_controller"
+      supervisor TRUE
     }
     SummitXlSteel {
       translation -72.07 42 0.23
       rotation 0 0 1 -1.5707953071795862
       name "AGV_12"
       controller "ss_controller"
+      supervisor TRUE
     }
     SummitXlSteel {
       translation -80.98 -46.68 0.23
       rotation 0 0 1 1.5708
       name "AGV_13"
       controller "ss_controller"
+      supervisor TRUE
     }
     SummitXlSteel {
       translation 63.28 36.42 0.23
       rotation 0 0 1 1.5708
       name "AGV_14"
       controller "ss_controller"
+      supervisor TRUE
     }
     SummitXlSteel {
       translation -97.05 -56.94 0.23
       rotation 0 0 1 1.5708
       name "AGV_15"
       controller "ss_controller"
+      supervisor TRUE
     }
   ]
 }
