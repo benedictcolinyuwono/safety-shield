@@ -77,11 +77,11 @@ while robot.step(timestep) != -1:
         heading_error = heading_error + 2.0 * math.pi
     
     # Simple proportional control for steering
-    steering_gain = 5.0
+    steering_gain = 7.5
     angular_velocity_command = steering_gain * heading_error
     
     # Limit angular velocity
-    max_angular_velocity = 2.0
+    max_angular_velocity = 4.0
     if angular_velocity_command > max_angular_velocity:
         angular_velocity_command = max_angular_velocity
     if angular_velocity_command < -max_angular_velocity:
