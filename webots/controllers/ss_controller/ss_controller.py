@@ -36,6 +36,7 @@ compass.enable(timestep)
 BASE_SPEED = 1.5
 WHEEL_RADIUS = 0.125
 WAYPOINT_THRESHOLD = 0.5
+SLOWDOWN_DISTANCE = 3.0
 MAX_LINEAR_ACCEL = 2.0
 MAX_ANGULAR_ACCEL = 3.0
 MAX_ANGULAR_VELOCITY = 2.0
@@ -46,36 +47,36 @@ WARNING_DISTANCE = 2.0
 
 # DWA PARAMETERS
 DWA_DT = 0.3
-DWA_PREDICT_TIME = 1.5
-DWA_V_SAMPLES = 8
+DWA_PREDICT_TIME = 1.0
+DWA_V_SAMPLES = 10
 DWA_W_SAMPLES = 11
 DWA_ALPHA = 1.5
-DWA_BETA = 2.5
-DWA_GAMMA = 0.3
+DWA_BETA = 1.8
+DWA_GAMMA = 1.0
 
 # WAYPOINT GOALS
 waypoint_goals = {
-    'AGV_1': (10.0, 42.0),
-    'AGV_2': (10.0, 36.0),
-    'AGV_3': (10.0, -0.31),
-    'AGV_4': (10.0, -40.0),
-    'AGV_5': (10.0, -46.0),
-    'AGV_6': (88.0, -10.0),
-    'AGV_7': (13.0, -70.0),
-    'AGV_8': (32.0, -70.0),
-    'AGV_9': (45.0, -70.0),
-    'AGV_10': (65.0, -70.0),
-    'AGV_11': (83.0, -70.0),
-    'AGV_12': (-80.0, 42.0),
-    'AGV_13': (-85.0, -46.0),
-    'AGV_14': (70.0, 36.0),
-    'AGV_15': (-100.0, -57.0),
+    'AGV_1': (65.0, 50.0),      # Open area top right
+    'AGV_2': (65.0, 25.0),      # Open area middle right
+    'AGV_3': (65.0, 5.0),       # Open area between sections
+    'AGV_4': (-95.0, 50.0),     # Open area top left
+    'AGV_5': (-95.0, 25.0),     # Open area middle left
+    'AGV_6': (15.0, -10.0),     # Center aisle
+    'AGV_7': (25.0, -65.0),     # Bottom section open area
+    'AGV_8': (50.0, -65.0),     # Bottom section middle
+    'AGV_9': (75.0, -65.0),     # Bottom section right
+    'AGV_10': (-30.0, 50.0),    # Top section middle aisle
+    'AGV_11': (-60.0, 50.0),    # Top section left aisle
+    'AGV_12': (-30.0, 5.0),     # Middle section aisle
+    'AGV_13': (-60.0, -30.0),   # Middle section left
+    'AGV_14': (30.0, 30.0),     # Top section right aisle
+    'AGV_15': (-80.0, -65.0),   # Bottom section far left
 }
 
 target_waypoint_x, target_waypoint_y = waypoint_goals[robot_name]
 print(f"{robot_name} starting navigation to waypoint ({target_waypoint_x}, {target_waypoint_y})")
 
-# RACK DEFINITIONS
+# OBSTACLE DEFINITIONS
 rack_definitions = [
     ("FG_Top_RackRowA_1", 4.35, 37.0), ("FG_Top_RackRowA_2", 8.7, 37.0),
     ("FG_Top_RackRowA_3", 8.7, 37.0), ("FG_Top_RackRowA_4", 8.7, 37.0),
@@ -106,6 +107,11 @@ rack_definitions = [
     ("FG_Bottom_RackRow_6", 8.7, 31.7), ("FG_Bottom_RackRow_7", 8.7, 31.7),
     ("FG_Bottom_RackRow_8", 8.7, 31.7), ("FG_Bottom_RackRowR_1", 5.1, 15.3),
     ("FG_Bottom_RackRowR_2", 5.1, 15.3),
+    ("FG_PalletizingConveyors_1A", 30.1, 2.17),
+    ("FG_PalletizingConveyors_1B", 2.17, 2.24),
+    ("FG_PalletizingConveyors_2A", 32.19, 2.17),
+    ("FG_PalletizingConveyors_2B", 2.17, 2.42),
+    ("FG_PalletizingConveyors_3", 32.1, 2.17),
 ]
 
 # NODE SEARCH FUNCTION
@@ -334,13 +340,20 @@ while robot.step(timestep) != -1:
         back_left_motor.setVelocity(0.0)
         continue
     
+    # ADAPTIVE SPEED SCALING
+    if distance_to_waypoint < SLOWDOWN_DISTANCE:
+        speed_scale = distance_to_waypoint / SLOWDOWN_DISTANCE
+        adaptive_max_speed = BASE_SPEED * max(speed_scale, 0.5)
+    else:
+        adaptive_max_speed = BASE_SPEED
+    
     # DYNAMIC WINDOW APPROACH
     dwa_v, dwa_w, dwa_score = dynamic_window_approach(
         current_x, current_y, current_heading, current_v, current_w,
         target_waypoint_x, target_waypoint_y, obstacles,
         DWA_DT, DWA_PREDICT_TIME,
         DWA_V_SAMPLES, DWA_W_SAMPLES,
-        BASE_SPEED, MAX_ANGULAR_VELOCITY,
+        adaptive_max_speed, MAX_ANGULAR_VELOCITY,
         MAX_LINEAR_ACCEL, MAX_ANGULAR_ACCEL,
         DWA_ALPHA, DWA_BETA, DWA_GAMMA
     )
