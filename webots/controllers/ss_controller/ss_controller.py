@@ -247,6 +247,7 @@ while robot.step(timestep) != -1:
     # DISTANCE-BASED VELOCITY CONTROL
     if min_distance < CRITICAL_DISTANCE:
         linear_velocity = 0.0
+        angular_velocity_command = 0.0
         print(f"{robot_name} [EMERGENCY] STOP! {min_distance:.2f}m to {closest_obstacle}")
     elif min_distance < WARNING_DISTANCE:
         safety_factor = (min_distance - CRITICAL_DISTANCE) / (WARNING_DISTANCE - CRITICAL_DISTANCE)
