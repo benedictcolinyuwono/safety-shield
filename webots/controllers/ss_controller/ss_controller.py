@@ -3,52 +3,45 @@ import math
 import sys
 import os
 
-# Add shield module path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-# Import shield modules
 from shield.risk import assess_collision_risk_2d
 from shield.limiter import limit_velocity, limit_angular_velocity
 from shield.supervisor import supervise_commands, PASS, GUARDED, EMERGENCY
-
-# Import geometry utilities
 from geometry_utils import closest_point_on_rectangle
 
-# Initialize robot
+# ROBOT INITIALIZATION
 robot = Supervisor()
 timestep = int(robot.getBasicTimeStep())
 robot_name = robot.getName()
 
-# Get motor devices
+# MOTOR SETUP
 front_right_motor = robot.getDevice('front_right_wheel_joint')
 front_left_motor = robot.getDevice('front_left_wheel_joint')
 back_right_motor = robot.getDevice('back_right_wheel_joint')
 back_left_motor = robot.getDevice('back_left_wheel_joint')
 
-# Set motors to velocity control mode
 front_right_motor.setPosition(float('inf'))
 front_left_motor.setPosition(float('inf'))
 back_right_motor.setPosition(float('inf'))
 back_left_motor.setPosition(float('inf'))
 
-# Get sensors
+# SENSOR SETUP
 gps = robot.getDevice('gps')
 gps.enable(timestep)
-
 compass = robot.getDevice('compass')
 compass.enable(timestep)
 
-# Constants
-BASE_SPEED = 1.5  # m/s (linear velocity)
-WHEEL_RADIUS = 0.125  # meters (Summit XL Steel wheel radius)
+# CONSTANTS
+BASE_SPEED = 1.0
+WHEEL_RADIUS = 0.125
 WAYPOINT_THRESHOLD = 0.5
-SAFETY_RADIUS = 1.5
-MIN_SAFE_DISTANCE = 2.5  # meters - emergency stop distance (position-based)
-PREDICTION_TIME = 0.5  # seconds - look ahead time
+CRITICAL_DISTANCE = 2.0
+WARNING_DISTANCE = 4.0
 MAX_ANGULAR_VELOCITY = 2.0
 STEERING_GAIN = 3.0
 
-# Waypoint goals
+# WAYPOINT GOALS
 waypoint_goals = {
     'AGV_1': (10.0, 42.0),
     'AGV_2': (10.0, 36.0),
@@ -68,95 +61,106 @@ waypoint_goals = {
 }
 
 target_waypoint_x, target_waypoint_y = waypoint_goals[robot_name]
-
 print(f"{robot_name} starting navigation to waypoint ({target_waypoint_x}, {target_waypoint_y})")
 
-# Rack definitions: name, width, length
+# RACK DEFINITIONS
 rack_definitions = [
-    # FG_Top RackA (16 racks)
-    ("FG_Top_RackRowA_1", 4.35, 37.0),
-    ("FG_Top_RackRowA_2", 8.7, 37.0),
-    ("FG_Top_RackRowA_3", 8.7, 37.0),
-    ("FG_Top_RackRowA_4", 8.7, 37.0),
-    ("FG_Top_RackRowA_5", 8.7, 37.0),
-    ("FG_Top_RackRowA_6", 8.7, 37.0),
-    ("FG_Top_RackRowA_7", 8.7, 37.0),
-    ("FG_Top_RackRowA_8", 8.7, 37.0),
-    ("FG_Top_RackRowA_9", 8.7, 37.0),
-    ("FG_Top_RackRowA_10", 8.7, 37.0),
-    ("FG_Top_RackRowA_11", 8.7, 37.0),
-    ("FG_Top_RackRowA_12", 8.7, 37.0),
-    ("FG_Top_RackRowA_13", 8.7, 37.0),
-    ("FG_Top_RackRowA_14", 8.7, 37.0),
-    ("FG_Top_RackRowA_15", 8.7, 37.0),
-    ("FG_Top_RackRowA_16", 8.7, 37.0),
-    # FG_Top RackB (13 racks)
-    ("FG_Top_RackRowB_1", 4.35, 31.7),
-    ("FG_Top_RackRowB_2", 8.7, 31.7),
-    ("FG_Top_RackRowB_3", 8.7, 31.7),
-    ("FG_Top_RackRowB_4", 8.7, 31.7),
-    ("FG_Top_RackRowB_5", 8.7, 31.7),
-    ("FG_Top_RackRowB_6", 8.7, 31.7),
-    ("FG_Top_RackRowB_7", 8.7, 31.7),
-    ("FG_Top_RackRowB_8", 8.7, 31.7),
-    ("FG_Top_RackRowB_9", 8.7, 31.7),
-    ("FG_Top_RackRowB_10", 8.7, 31.7),
-    ("FG_Top_RackRowB_11", 8.7, 31.7),
-    ("FG_Top_RackRowB_12", 8.7, 31.7),
-    ("FG_Top_RackRowB_13", 8.7, 31.7),
-    # FG_Top RackR (2 racks)
-    ("FG_Top_RackRowR_1", 5.1, 15.3),
-    ("FG_Top_RackRowR_2", 5.1, 15.3),
-    # FG_Middle (14 racks)
-    ("FG_Middle_RackRow_1", 8.7, 37.0),
-    ("FG_Middle_RackRow_2", 8.7, 37.0),
-    ("FG_Middle_RackRow_3", 8.7, 37.0),
-    ("FG_Middle_RackRow_4", 8.7, 37.0),
-    ("FG_Middle_RackRow_5", 8.7, 37.0),
-    ("FG_Middle_RackRow_6", 8.7, 37.0),
-    ("FG_Middle_RackRow_7", 8.7, 37.0),
-    ("FG_Middle_RackRow_8", 8.7, 37.0),
-    ("FG_Middle_RackRow_9", 8.7, 37.0),
-    ("FG_Middle_RackRow_10", 8.7, 37.0),
-    ("FG_Middle_RackRow_11", 8.7, 37.0),
-    ("FG_Middle_RackRow_12", 8.7, 37.0),
-    ("FG_Middle_RackRow_13", 8.7, 37.0),
-    ("FG_Middle_RackRow_14", 8.7, 37.0),
-    # FG_Middle RackR (2 racks)
-    ("FG_Middle_RackRowR_1", 5.1, 15.3),
-    ("FG_Middle_RackRowR_2", 5.1, 15.3),
-    # FG_Bottom (8 racks)
-    ("FG_Bottom_RackRow_1", 8.7, 31.7),
-    ("FG_Bottom_RackRow_2", 8.7, 31.7),
-    ("FG_Bottom_RackRow_3", 8.7, 31.7),
-    ("FG_Bottom_RackRow_4", 8.7, 31.7),
-    ("FG_Bottom_RackRow_5", 8.7, 31.7),
-    ("FG_Bottom_RackRow_6", 8.7, 31.7),
-    ("FG_Bottom_RackRow_7", 8.7, 31.7),
-    ("FG_Bottom_RackRow_8", 8.7, 31.7),
-    # FG_Bottom RackR (2 racks)
-    ("FG_Bottom_RackRowR_1", 5.1, 15.3),
+    ("FG_Top_RackRowA_1", 4.35, 37.0), ("FG_Top_RackRowA_2", 8.7, 37.0),
+    ("FG_Top_RackRowA_3", 8.7, 37.0), ("FG_Top_RackRowA_4", 8.7, 37.0),
+    ("FG_Top_RackRowA_5", 8.7, 37.0), ("FG_Top_RackRowA_6", 8.7, 37.0),
+    ("FG_Top_RackRowA_7", 8.7, 37.0), ("FG_Top_RackRowA_8", 8.7, 37.0),
+    ("FG_Top_RackRowA_9", 8.7, 37.0), ("FG_Top_RackRowA_10", 8.7, 37.0),
+    ("FG_Top_RackRowA_11", 8.7, 37.0), ("FG_Top_RackRowA_12", 8.7, 37.0),
+    ("FG_Top_RackRowA_13", 8.7, 37.0), ("FG_Top_RackRowA_14", 8.7, 37.0),
+    ("FG_Top_RackRowA_15", 8.7, 37.0), ("FG_Top_RackRowA_16", 8.7, 37.0),
+    ("FG_Top_RackRowB_1", 4.35, 31.7), ("FG_Top_RackRowB_2", 8.7, 31.7),
+    ("FG_Top_RackRowB_3", 8.7, 31.7), ("FG_Top_RackRowB_4", 8.7, 31.7),
+    ("FG_Top_RackRowB_5", 8.7, 31.7), ("FG_Top_RackRowB_6", 8.7, 31.7),
+    ("FG_Top_RackRowB_7", 8.7, 31.7), ("FG_Top_RackRowB_8", 8.7, 31.7),
+    ("FG_Top_RackRowB_9", 8.7, 31.7), ("FG_Top_RackRowB_10", 8.7, 31.7),
+    ("FG_Top_RackRowB_11", 8.7, 31.7), ("FG_Top_RackRowB_12", 8.7, 31.7),
+    ("FG_Top_RackRowB_13", 8.7, 31.7), ("FG_Top_RackRowR_1", 5.1, 15.3),
+    ("FG_Top_RackRowR_2", 5.1, 15.3), ("FG_Middle_RackRow_1", 8.7, 37.0),
+    ("FG_Middle_RackRow_2", 8.7, 37.0), ("FG_Middle_RackRow_3", 8.7, 37.0),
+    ("FG_Middle_RackRow_4", 8.7, 37.0), ("FG_Middle_RackRow_5", 8.7, 37.0),
+    ("FG_Middle_RackRow_6", 8.7, 37.0), ("FG_Middle_RackRow_7", 8.7, 37.0),
+    ("FG_Middle_RackRow_8", 8.7, 37.0), ("FG_Middle_RackRow_9", 8.7, 37.0),
+    ("FG_Middle_RackRow_10", 8.7, 37.0), ("FG_Middle_RackRow_11", 8.7, 37.0),
+    ("FG_Middle_RackRow_12", 8.7, 37.0), ("FG_Middle_RackRow_13", 8.7, 37.0),
+    ("FG_Middle_RackRow_14", 8.7, 37.0), ("FG_Middle_RackRowR_1", 5.1, 15.3),
+    ("FG_Middle_RackRowR_2", 5.1, 15.3), ("FG_Bottom_RackRow_1", 8.7, 31.7),
+    ("FG_Bottom_RackRow_2", 8.7, 31.7), ("FG_Bottom_RackRow_3", 8.7, 31.7),
+    ("FG_Bottom_RackRow_4", 8.7, 31.7), ("FG_Bottom_RackRow_5", 8.7, 31.7),
+    ("FG_Bottom_RackRow_6", 8.7, 31.7), ("FG_Bottom_RackRow_7", 8.7, 31.7),
+    ("FG_Bottom_RackRow_8", 8.7, 31.7), ("FG_Bottom_RackRowR_1", 5.1, 15.3),
     ("FG_Bottom_RackRowR_2", 5.1, 15.3),
 ]
 
-# Initialize velocity tracking
+# NODE SEARCH FUNCTION
+def find_node_by_name(supervisor, name):
+    root = supervisor.getRoot()
+    children_field = root.getField('children')
+    
+    def search_node(node):
+        name_field = node.getField('name')
+        if name_field is not None:
+            node_name = name_field.getSFString()
+            if node_name == name:
+                return node
+        
+        children_field = node.getField('children')
+        if children_field is not None:
+            for i in range(children_field.getCount()):
+                child = children_field.getMFNode(i)
+                if child is not None:
+                    result = search_node(child)
+                    if result is not None:
+                        return result
+        return None
+    
+    for i in range(children_field.getCount()):
+        child = children_field.getMFNode(i)
+        if child is not None:
+            result = search_node(child)
+            if result is not None:
+                return result
+    return None
+
+# STATE INITIALIZATION
+rack_nodes_cache = {}
+racks_initialized = False
 previous_x = None
 previous_y = None
 previous_time = 0.0
+step_count = 0
 
-# Main control loop
+# MAIN CONTROL LOOP
 while robot.step(timestep) != -1:
-    # Read my own state
+    step_count += 1
+    
+    # RACK NODE INITIALIZATION (FIRST STEP ONLY)
+    if not racks_initialized:
+        print(f"{robot_name} initializing rack detection...")
+        for rack_name, rack_width, rack_length in rack_definitions:
+            rack_node = find_node_by_name(robot, rack_name)
+            if rack_node is not None:
+                rack_nodes_cache[rack_name] = {
+                    'node': rack_node,
+                    'width': rack_width,
+                    'length': rack_length
+                }
+        print(f"{robot_name} found {len(rack_nodes_cache)} racks")
+        racks_initialized = True
+    
+    # READ CURRENT STATE
     gps_values = gps.getValues()
     current_x = gps_values[0]
     current_y = gps_values[1]
     
     compass_values = compass.getValues()
-    compass_x = compass_values[0]
-    compass_y = compass_values[1]
-    current_heading = math.atan2(compass_y, compass_x)
+    current_heading = math.atan2(compass_values[1], compass_values[0])
     
-    # Calculate my velocity
+    # CALCULATE VELOCITY
     current_time = robot.getTime()
     delta_time = current_time - previous_time
     
@@ -167,18 +171,14 @@ while robot.step(timestep) != -1:
         my_vx = 0.0
         my_vy = 0.0
     
-    my_speed = math.sqrt(my_vx * my_vx + my_vy * my_vy)
-    
-    # Calculate predicted position (look-ahead)
-    predicted_x = current_x + my_vx * PREDICTION_TIME
-    predicted_y = current_y + my_vy * PREDICTION_TIME
-    
     previous_x = current_x
     previous_y = current_y
     previous_time = current_time
     
-    # Read other AGVs' positions
-    other_agvs = []
+    # FIND MINIMUM DISTANCE TO OBSTACLES
+    min_distance = math.inf
+    closest_obstacle = None
+    
     for i in range(1, 16):
         agv_name = f"AGV_{i}"
         if agv_name == robot_name:
@@ -187,108 +187,44 @@ while robot.step(timestep) != -1:
         agv_node = robot.getFromDef(agv_name)
         if agv_node is not None:
             position = agv_node.getPosition()
-            other_agvs.append({
-                'name': agv_name,
-                'x': position[0],
-                'y': position[1],
-                'z': position[2]
-            })
+            dx = position[0] - current_x
+            dy = position[1] - current_y
+            distance = math.sqrt(dx * dx + dy * dy)
+            
+            if distance < min_distance:
+                min_distance = distance
+                closest_obstacle = agv_name
     
-    # Assess collision risk to all other AGVs
-    worst_risk = {
-        "ttc": math.inf,
-        "headway": math.inf,
-        "gap_m": math.inf,
-        "margin_low": False,
-        "violation_predicted": False,
-    }
-    closest_threat = None
-    min_distance = math.inf
-    
-    # Check current position collision risk
-    for other in other_agvs:
-        risk = assess_collision_risk_2d(
-            current_x, current_y, my_vx, my_vy,
-            other['x'], other['y'],
-            other_vx=0.0, other_vy=0.0,
-            safety_radius=SAFETY_RADIUS
-        )
-        
-        if risk["gap_m"] < min_distance:
-            min_distance = risk["gap_m"]
-        
-        if risk["ttc"] < worst_risk["ttc"]:
-            worst_risk = risk
-            closest_threat = other['name']
-    
-    # Check predicted position collision risk (look-ahead)
-    for other in other_agvs:
-        risk_predicted = assess_collision_risk_2d(
-            predicted_x, predicted_y, my_vx, my_vy,
-            other['x'], other['y'],
-            other_vx=0.0, other_vy=0.0,
-            safety_radius=SAFETY_RADIUS
-        )
-        
-        if risk_predicted["ttc"] < worst_risk["ttc"]:
-            worst_risk = risk_predicted
-            closest_threat = other['name'] + " (predicted)"
-    
-    # Assess collision risk to all racks
-    for rack_name, rack_width, rack_length in rack_definitions:
-        rack_node = robot.getFromDef(rack_name)
-        if rack_node is None:
-            continue
-        
+    for rack_name, rack_data in rack_nodes_cache.items():
+        rack_node = rack_data['node']
         rack_position = rack_node.getPosition()
-        rack_x = rack_position[0]
-        rack_y = rack_position[1]
         
-        # Get rack rotation (if any)
         rack_rotation_field = rack_node.getField('rotation')
-        if rack_rotation_field is not None:
-            rack_rotation_values = rack_rotation_field.getSFRotation()
-            rack_rotation = rack_rotation_values[3]
-        else:
-            rack_rotation = 0.0
+        rack_rotation = rack_rotation_field.getSFRotation()[3] if rack_rotation_field else 0.0
         
-        # Find closest point on rack rectangle
         closest_x, closest_y = closest_point_on_rectangle(
             current_x, current_y,
-            rack_x, rack_y,
-            rack_width, rack_length,
+            rack_position[0], rack_position[1],
+            rack_data['width'], rack_data['length'],
             rack_rotation
         )
         
-        # Calculate collision risk to this closest point
-        risk = assess_collision_risk_2d(
-            current_x, current_y, my_vx, my_vy,
-            closest_x, closest_y,
-            other_vx=0.0, other_vy=0.0,
-            safety_radius=SAFETY_RADIUS
-        )
+        dx = closest_x - current_x
+        dy = closest_y - current_y
+        distance = math.sqrt(dx * dx + dy * dy)
         
-        if risk["gap_m"] < min_distance:
-            min_distance = risk["gap_m"]
-        
-        if risk["ttc"] < worst_risk["ttc"]:
-            worst_risk = risk
-            closest_threat = rack_name
+        if distance < min_distance:
+            min_distance = distance
+            closest_obstacle = rack_name
     
-    # POSITION-BASED SAFETY OVERRIDE
-    # If too close to anything, force emergency stop regardless of velocity
-    if min_distance < MIN_SAFE_DISTANCE:
-        worst_risk["violation_predicted"] = True
-        worst_risk["margin_low"] = True
-        if min_distance < MIN_SAFE_DISTANCE * 0.7:  # Very close (< 1.75m)
-            print(f"{robot_name} EMERGENCY DISTANCE: {min_distance:.2f}m to {closest_threat}")
+    if step_count % 30 == 0:
+        print(f"{robot_name} closest: {closest_obstacle} at {min_distance:.2f}m")
     
-    # Calculate vector to waypoint
+    # WAYPOINT NAVIGATION
     delta_x = target_waypoint_x - current_x
     delta_y = target_waypoint_y - current_y
     distance_to_waypoint = math.sqrt(delta_x * delta_x + delta_y * delta_y)
     
-    # Check if waypoint reached
     if distance_to_waypoint < WAYPOINT_THRESHOLD:
         print(f"{robot_name} reached waypoint!")
         front_right_motor.setVelocity(0.0)
@@ -297,42 +233,33 @@ while robot.step(timestep) != -1:
         back_left_motor.setVelocity(0.0)
         continue
     
-    # Calculate desired heading to waypoint
+    # STEERING CONTROL
     desired_heading = math.atan2(delta_y, delta_x)
-    
-    # Calculate heading error
     heading_error = desired_heading - current_heading
+    
     if heading_error > math.pi:
-        heading_error = heading_error - 2.0 * math.pi
+        heading_error -= 2.0 * math.pi
     if heading_error < -math.pi:
-        heading_error = heading_error + 2.0 * math.pi
+        heading_error += 2.0 * math.pi
     
-    # Proportional control for steering
-    angular_velocity_command = STEERING_GAIN * heading_error
-    angular_velocity_command = limit_angular_velocity(angular_velocity_command, MAX_ANGULAR_VELOCITY)
+    angular_velocity_command = limit_angular_velocity(STEERING_GAIN * heading_error, MAX_ANGULAR_VELOCITY)
     
-    # Base linear velocity command (no warmup - full speed)
-    linear_velocity_command = BASE_SPEED
+    # DISTANCE-BASED VELOCITY CONTROL
+    if min_distance < CRITICAL_DISTANCE:
+        linear_velocity = 0.0
+        print(f"{robot_name} [EMERGENCY] STOP! {min_distance:.2f}m to {closest_obstacle}")
+    elif min_distance < WARNING_DISTANCE:
+        safety_factor = (min_distance - CRITICAL_DISTANCE) / (WARNING_DISTANCE - CRITICAL_DISTANCE)
+        linear_velocity = BASE_SPEED * safety_factor
+        if step_count % 20 == 0:
+            print(f"{robot_name} [SLOWING] {min_distance:.2f}m to {closest_obstacle}")
+    else:
+        linear_velocity = BASE_SPEED
     
-    # Apply safety shield (works in m/s)
-    state = {"v_cap": BASE_SPEED}
-    commanded_velocities = (linear_velocity_command, angular_velocity_command)
-    mode, (v_safe, w_safe) = supervise_commands(state, commanded_velocities, worst_risk)
-    
-    # Debug output (only print when intervening)
-    if mode == EMERGENCY:
-        print(f"{robot_name} [{mode}] STOPPING for {closest_threat}: TTC={worst_risk['ttc']:.2f}s, gap={worst_risk['gap_m']:.2f}m")
-    elif mode == GUARDED:
-        # Print every 20 steps to reduce spam
-        if int(current_time * 100) % 20 == 0:
-            print(f"{robot_name} [{mode}] Slowing for {closest_threat}: TTC={worst_risk['ttc']:.2f}s, v={v_safe:.2f}m/s")
-    
-    # Convert linear velocity from m/s to wheel rad/s
-    wheel_v_safe = v_safe / WHEEL_RADIUS
-    
-    # Apply differential drive: left/right wheel velocities
-    left_velocity = wheel_v_safe - w_safe
-    right_velocity = wheel_v_safe + w_safe
+    # MOTOR COMMANDS
+    wheel_velocity = linear_velocity / WHEEL_RADIUS
+    left_velocity = wheel_velocity - angular_velocity_command
+    right_velocity = wheel_velocity + angular_velocity_command
     
     front_left_motor.setVelocity(left_velocity)
     back_left_motor.setVelocity(left_velocity)
