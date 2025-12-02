@@ -39,11 +39,12 @@ compass = robot.getDevice('compass')
 compass.enable(timestep)
 
 # Constants
-BASE_SPEED = 15.0
+BASE_SPEED = 2.0  # m/s (linear velocity)
+WHEEL_RADIUS = 0.125  # meters (Summit XL Steel wheel radius)
 WAYPOINT_THRESHOLD = 0.5
-SAFETY_RADIUS = 1.0
+SAFETY_RADIUS = 1.5  # Increased for better safety margin
 MAX_ANGULAR_VELOCITY = 2.0
-STEERING_GAIN = 5.0
+STEERING_GAIN = 3.0  # Reduced for smoother turns
 
 # Waypoint goals
 waypoint_goals = {
@@ -137,8 +138,8 @@ rack_definitions = [
 ]
 
 # Initialize velocity tracking
-previous_x = gps.getValues()[0]
-previous_y = gps.getValues()[1]
+previous_x = None
+previous_y = None
 previous_time = 0.0
 
 # Main control loop
@@ -157,7 +158,7 @@ while robot.step(timestep) != -1:
     current_time = robot.getTime()
     delta_time = current_time - previous_time
     
-    if delta_time > 0.0:
+    if previous_x is not None and delta_time > 0.0:
         my_vx = (current_x - previous_x) / delta_time
         my_vy = (current_y - previous_y) / delta_time
     else:
@@ -275,23 +276,26 @@ while robot.step(timestep) != -1:
     angular_velocity_command = STEERING_GAIN * heading_error
     angular_velocity_command = limit_angular_velocity(angular_velocity_command, MAX_ANGULAR_VELOCITY)
     
-    # Base linear velocity command
-    linear_velocity_command = BASE_SPEED * 0.5
+    # Base linear velocity command (in m/s)
+    linear_velocity_command = BASE_SPEED
     
-    # Apply safety shield
+    # Apply safety shield (works in m/s)
     state = {"v_cap": BASE_SPEED}
     commanded_velocities = (linear_velocity_command, angular_velocity_command)
     mode, (v_safe, w_safe) = supervise_commands(state, commanded_velocities, worst_risk)
     
     # Debug output
     if mode == EMERGENCY:
-        print(f"{robot_name} [{mode}] STOPPING for {closest_threat}: TTC={worst_risk['ttc']:.2f}s")
+        print(f"{robot_name} [{mode}] STOPPING for {closest_threat}: TTC={worst_risk['ttc']:.2f}s, gap={worst_risk['gap_m']:.2f}m")
     elif mode == GUARDED:
-        print(f"{robot_name} [{mode}] Slowing for {closest_threat}: TTC={worst_risk['ttc']:.2f}s, v={v_safe:.2f}")
+        print(f"{robot_name} [{mode}] Slowing for {closest_threat}: TTC={worst_risk['ttc']:.2f}s, v={v_safe:.2f}m/s")
     
-    # Apply safe velocities to motors
-    left_velocity = v_safe - w_safe
-    right_velocity = v_safe + w_safe
+    # Convert linear velocity from m/s to wheel rad/s
+    wheel_v_safe = v_safe / WHEEL_RADIUS
+    
+    # Apply differential drive: left/right wheel velocities
+    left_velocity = wheel_v_safe - w_safe
+    right_velocity = wheel_v_safe + w_safe
     
     front_left_motor.setVelocity(left_velocity)
     back_left_motor.setVelocity(left_velocity)
