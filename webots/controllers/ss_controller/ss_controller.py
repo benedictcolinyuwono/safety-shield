@@ -39,12 +39,14 @@ compass = robot.getDevice('compass')
 compass.enable(timestep)
 
 # Constants
-BASE_SPEED = 2.0  # m/s (linear velocity)
+BASE_SPEED = 1.5  # m/s (linear velocity)
 WHEEL_RADIUS = 0.125  # meters (Summit XL Steel wheel radius)
 WAYPOINT_THRESHOLD = 0.5
-SAFETY_RADIUS = 1.5  # Increased for better safety margin
+SAFETY_RADIUS = 1.5
+MIN_SAFE_DISTANCE = 2.5  # meters - emergency stop distance (position-based)
+PREDICTION_TIME = 0.5  # seconds - look ahead time
 MAX_ANGULAR_VELOCITY = 2.0
-STEERING_GAIN = 3.0  # Reduced for smoother turns
+STEERING_GAIN = 3.0
 
 # Waypoint goals
 waypoint_goals = {
@@ -167,6 +169,10 @@ while robot.step(timestep) != -1:
     
     my_speed = math.sqrt(my_vx * my_vx + my_vy * my_vy)
     
+    # Calculate predicted position (look-ahead)
+    predicted_x = current_x + my_vx * PREDICTION_TIME
+    predicted_y = current_y + my_vy * PREDICTION_TIME
+    
     previous_x = current_x
     previous_y = current_y
     previous_time = current_time
@@ -197,7 +203,9 @@ while robot.step(timestep) != -1:
         "violation_predicted": False,
     }
     closest_threat = None
+    min_distance = math.inf
     
+    # Check current position collision risk
     for other in other_agvs:
         risk = assess_collision_risk_2d(
             current_x, current_y, my_vx, my_vy,
@@ -206,9 +214,25 @@ while robot.step(timestep) != -1:
             safety_radius=SAFETY_RADIUS
         )
         
+        if risk["gap_m"] < min_distance:
+            min_distance = risk["gap_m"]
+        
         if risk["ttc"] < worst_risk["ttc"]:
             worst_risk = risk
             closest_threat = other['name']
+    
+    # Check predicted position collision risk (look-ahead)
+    for other in other_agvs:
+        risk_predicted = assess_collision_risk_2d(
+            predicted_x, predicted_y, my_vx, my_vy,
+            other['x'], other['y'],
+            other_vx=0.0, other_vy=0.0,
+            safety_radius=SAFETY_RADIUS
+        )
+        
+        if risk_predicted["ttc"] < worst_risk["ttc"]:
+            worst_risk = risk_predicted
+            closest_threat = other['name'] + " (predicted)"
     
     # Assess collision risk to all racks
     for rack_name, rack_width, rack_length in rack_definitions:
@@ -244,9 +268,20 @@ while robot.step(timestep) != -1:
             safety_radius=SAFETY_RADIUS
         )
         
+        if risk["gap_m"] < min_distance:
+            min_distance = risk["gap_m"]
+        
         if risk["ttc"] < worst_risk["ttc"]:
             worst_risk = risk
             closest_threat = rack_name
+    
+    # POSITION-BASED SAFETY OVERRIDE
+    # If too close to anything, force emergency stop regardless of velocity
+    if min_distance < MIN_SAFE_DISTANCE:
+        worst_risk["violation_predicted"] = True
+        worst_risk["margin_low"] = True
+        if min_distance < MIN_SAFE_DISTANCE * 0.7:  # Very close (< 1.75m)
+            print(f"{robot_name} EMERGENCY DISTANCE: {min_distance:.2f}m to {closest_threat}")
     
     # Calculate vector to waypoint
     delta_x = target_waypoint_x - current_x
@@ -276,7 +311,7 @@ while robot.step(timestep) != -1:
     angular_velocity_command = STEERING_GAIN * heading_error
     angular_velocity_command = limit_angular_velocity(angular_velocity_command, MAX_ANGULAR_VELOCITY)
     
-    # Base linear velocity command (in m/s)
+    # Base linear velocity command (no warmup - full speed)
     linear_velocity_command = BASE_SPEED
     
     # Apply safety shield (works in m/s)
@@ -284,11 +319,13 @@ while robot.step(timestep) != -1:
     commanded_velocities = (linear_velocity_command, angular_velocity_command)
     mode, (v_safe, w_safe) = supervise_commands(state, commanded_velocities, worst_risk)
     
-    # Debug output
+    # Debug output (only print when intervening)
     if mode == EMERGENCY:
         print(f"{robot_name} [{mode}] STOPPING for {closest_threat}: TTC={worst_risk['ttc']:.2f}s, gap={worst_risk['gap_m']:.2f}m")
     elif mode == GUARDED:
-        print(f"{robot_name} [{mode}] Slowing for {closest_threat}: TTC={worst_risk['ttc']:.2f}s, v={v_safe:.2f}m/s")
+        # Print every 20 steps to reduce spam
+        if int(current_time * 100) % 20 == 0:
+            print(f"{robot_name} [{mode}] Slowing for {closest_threat}: TTC={worst_risk['ttc']:.2f}s, v={v_safe:.2f}m/s")
     
     # Convert linear velocity from m/s to wheel rad/s
     wheel_v_safe = v_safe / WHEEL_RADIUS
