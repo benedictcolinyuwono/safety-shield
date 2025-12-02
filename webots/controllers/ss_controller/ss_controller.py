@@ -32,14 +32,26 @@ gps.enable(timestep)
 compass = robot.getDevice('compass')
 compass.enable(timestep)
 
-# CONSTANTS
-BASE_SPEED = 1.0
+# NAVIGATION CONSTANTS
+BASE_SPEED = 1.5
 WHEEL_RADIUS = 0.125
 WAYPOINT_THRESHOLD = 0.5
+MAX_LINEAR_ACCEL = 2.0
+MAX_ANGULAR_ACCEL = 3.0
+MAX_ANGULAR_VELOCITY = 2.0
+
+# SAFETY CONSTANTS
 CRITICAL_DISTANCE = 1.0
 WARNING_DISTANCE = 2.0
-MAX_ANGULAR_VELOCITY = 2.0
-STEERING_GAIN = 3.0
+
+# DWA PARAMETERS
+DWA_DT = 0.3
+DWA_PREDICT_TIME = 1.5
+DWA_V_SAMPLES = 8
+DWA_W_SAMPLES = 11
+DWA_ALPHA = 1.5
+DWA_BETA = 2.5
+DWA_GAMMA = 0.3
 
 # WAYPOINT GOALS
 waypoint_goals = {
@@ -126,19 +138,156 @@ def find_node_by_name(supervisor, name):
                 return result
     return None
 
+# DYNAMIC WINDOW APPROACH IMPLEMENTATION
+def predict_trajectory(x, y, theta, v, w, dt, steps):
+    """
+    Differential drive kinematics trajectory prediction.
+    Integrates: dx/dt = v*cos(θ), dy/dt = v*sin(θ), dθ/dt = ω
+    """
+    trajectory = [(x, y, theta)]
+    for _ in range(steps):
+        x += v * math.cos(theta) * dt
+        y += v * math.sin(theta) * dt
+        theta += w * dt
+        trajectory.append((x, y, theta))
+    return trajectory
+
+def check_trajectory_collision(trajectory, obstacles, safety_radius=1.0):
+    """
+    Computes minimum clearance dist(v,ω) along trajectory.
+    Returns negative if collision detected.
+    """
+    min_clearance = math.inf
+    
+    for x, y, _ in trajectory:
+        for obs in obstacles:
+            dx = obs['x'] - x
+            dy = obs['y'] - y
+            dist = math.sqrt(dx * dx + dy * dy) - safety_radius
+            min_clearance = min(min_clearance, dist)
+            
+            if dist < 0:
+                return -1.0
+    
+    return min_clearance
+
+def heading_objective(trajectory, goal_x, goal_y):
+    """
+    Heading objective: heading(v,ω) = π - |Δθ|
+    Measures alignment between trajectory endpoint and goal direction.
+    Normalized to [0,1] where 1 = perfect alignment.
+    """
+    final_x, final_y, final_theta = trajectory[-1]
+    
+    dx = goal_x - final_x
+    dy = goal_y - final_y
+    angle_to_goal = math.atan2(dy, dx)
+    
+    angle_diff = abs(angle_to_goal - final_theta)
+    while angle_diff > math.pi:
+        angle_diff -= 2.0 * math.pi
+    angle_diff = abs(angle_diff)
+    
+    return (math.pi - angle_diff) / math.pi
+
+def clearance_objective(clearance, max_clearance=10.0):
+    """
+    Clearance objective: dist(v,ω) normalized.
+    Higher clearance from obstacles is preferred.
+    """
+    if clearance < 0:
+        return 0.0
+    return min(clearance / max_clearance, 1.0)
+
+def velocity_objective(v, max_v):
+    """
+    Velocity objective: velocity(v,ω) = v/v_max.
+    Encourages forward progress toward goal.
+    """
+    return v / max_v
+
+def evaluate_trajectory(trajectory, goal_x, goal_y, obstacles, v, max_v, alpha, beta, gamma):
+    """
+    Multi-objective optimization function (Fox et al., 1997):
+    G(v,ω) = α·heading(v,ω) + β·dist(v,ω) + γ·velocity(v,ω)
+    
+    Parameters:
+    - α: goal-seeking weight
+    - β: obstacle avoidance weight  
+    - γ: progress weight
+    """
+    clearance = check_trajectory_collision(trajectory, obstacles)
+    
+    if clearance < 0:
+        return -math.inf
+    
+    h_obj = heading_objective(trajectory, goal_x, goal_y)
+    c_obj = clearance_objective(clearance)
+    v_obj = velocity_objective(v, max_v)
+    
+    return alpha * h_obj + beta * c_obj + gamma * v_obj
+
+def dynamic_window_approach(current_x, current_y, current_theta, current_v, current_w,
+                            goal_x, goal_y, obstacles, dt, predict_time,
+                            v_samples, w_samples, max_v, max_w, max_accel_v, max_accel_w,
+                            alpha, beta, gamma):
+    """
+    Dynamic Window Approach (Fox et al., 1997).
+    
+    Computes admissible velocity space V_a ∩ V_d where:
+    - V_a: velocities within robot limits
+    - V_d: velocities reachable given acceleration constraints (dynamic window)
+    
+    Optimization: arg max G(v,ω) over collision-free trajectories.
+    """
+    predict_steps = int(predict_time / dt)
+    
+    v_min = max(0, current_v - max_accel_v * dt)
+    v_max = min(max_v, current_v + max_accel_v * dt)
+    
+    w_min = max(-max_w, current_w - max_accel_w * dt)
+    w_max = min(max_w, current_w + max_accel_w * dt)
+    
+    best_score = -math.inf
+    best_v = 0.0
+    best_w = 0.0
+    
+    v_step = (v_max - v_min) / max(v_samples - 1, 1) if v_samples > 1 else 0
+    w_step = (w_max - w_min) / max(w_samples - 1, 1) if w_samples > 1 else 0
+    
+    for i in range(v_samples):
+        v = v_min + i * v_step
+        for j in range(w_samples):
+            w = w_min + j * w_step
+            
+            trajectory = predict_trajectory(current_x, current_y, current_theta,
+                                          v, w, dt, predict_steps)
+            
+            score = evaluate_trajectory(trajectory, goal_x, goal_y, obstacles,
+                                       v, max_v, alpha, beta, gamma)
+            
+            if score > best_score:
+                best_score = score
+                best_v = v
+                best_w = w
+    
+    return best_v, best_w, best_score
+
 # STATE INITIALIZATION
 rack_nodes_cache = {}
 racks_initialized = False
 previous_x = None
 previous_y = None
 previous_time = 0.0
+current_v = 0.0
+current_w = 0.0
 step_count = 0
 
 # MAIN CONTROL LOOP
 while robot.step(timestep) != -1:
     step_count += 1
     
-    # RACK NODE INITIALIZATION (FIRST STEP ONLY)
+    # RACK NODE INITIALIZATION
     if not racks_initialized:
         print(f"{robot_name} initializing rack detection...")
         for rack_name, rack_width, rack_length in rack_definitions:
@@ -167,17 +316,14 @@ while robot.step(timestep) != -1:
     if previous_x is not None and delta_time > 0.0:
         my_vx = (current_x - previous_x) / delta_time
         my_vy = (current_y - previous_y) / delta_time
-    else:
-        my_vx = 0.0
-        my_vy = 0.0
+        current_v = math.sqrt(my_vx * my_vx + my_vy * my_vy)
     
     previous_x = current_x
     previous_y = current_y
     previous_time = current_time
     
-    # FIND MINIMUM DISTANCE TO OBSTACLES
-    min_distance = math.inf
-    closest_obstacle = None
+    # BUILD OBSTACLE LIST FOR DWA
+    obstacles = []
     
     for i in range(1, 16):
         agv_name = f"AGV_{i}"
@@ -187,13 +333,7 @@ while robot.step(timestep) != -1:
         agv_node = robot.getFromDef(agv_name)
         if agv_node is not None:
             position = agv_node.getPosition()
-            dx = position[0] - current_x
-            dy = position[1] - current_y
-            distance = math.sqrt(dx * dx + dy * dy)
-            
-            if distance < min_distance:
-                min_distance = distance
-                closest_obstacle = agv_name
+            obstacles.append({'x': position[0], 'y': position[1]})
     
     for rack_name, rack_data in rack_nodes_cache.items():
         rack_node = rack_data['node']
@@ -209,18 +349,9 @@ while robot.step(timestep) != -1:
             rack_rotation
         )
         
-        dx = closest_x - current_x
-        dy = closest_y - current_y
-        distance = math.sqrt(dx * dx + dy * dy)
-        
-        if distance < min_distance:
-            min_distance = distance
-            closest_obstacle = rack_name
+        obstacles.append({'x': closest_x, 'y': closest_y})
     
-    if step_count % 30 == 0:
-        print(f"{robot_name} closest: {closest_obstacle} at {min_distance:.2f}m")
-    
-    # WAYPOINT NAVIGATION
+    # WAYPOINT CHECK
     delta_x = target_waypoint_x - current_x
     delta_y = target_waypoint_y - current_y
     distance_to_waypoint = math.sqrt(delta_x * delta_x + delta_y * delta_y)
@@ -233,34 +364,48 @@ while robot.step(timestep) != -1:
         back_left_motor.setVelocity(0.0)
         continue
     
-    # STEERING CONTROL
-    desired_heading = math.atan2(delta_y, delta_x)
-    heading_error = desired_heading - current_heading
+    # DYNAMIC WINDOW APPROACH
+    dwa_v, dwa_w, dwa_score = dynamic_window_approach(
+        current_x, current_y, current_heading, current_v, current_w,
+        target_waypoint_x, target_waypoint_y, obstacles,
+        DWA_DT, DWA_PREDICT_TIME,
+        DWA_V_SAMPLES, DWA_W_SAMPLES,
+        BASE_SPEED, MAX_ANGULAR_VELOCITY,
+        MAX_LINEAR_ACCEL, MAX_ANGULAR_ACCEL,
+        DWA_ALPHA, DWA_BETA, DWA_GAMMA
+    )
     
-    if heading_error > math.pi:
-        heading_error -= 2.0 * math.pi
-    if heading_error < -math.pi:
-        heading_error += 2.0 * math.pi
+    # SAFETY SHIELD OVERRIDE
+    min_distance = math.inf
+    closest_obstacle = None
     
-    angular_velocity_command = limit_angular_velocity(STEERING_GAIN * heading_error, MAX_ANGULAR_VELOCITY)
+    for obs in obstacles:
+        dx = obs['x'] - current_x
+        dy = obs['y'] - current_y
+        dist = math.sqrt(dx * dx + dy * dy)
+        if dist < min_distance:
+            min_distance = dist
     
-    # DISTANCE-BASED VELOCITY CONTROL
     if min_distance < CRITICAL_DISTANCE:
         linear_velocity = 0.0
-        angular_velocity_command = 0.0
-        print(f"{robot_name} [EMERGENCY] STOP! {min_distance:.2f}m to {closest_obstacle}")
+        angular_velocity = 0.0
+        if step_count % 20 == 0:
+            print(f"{robot_name} [SAFETY OVERRIDE] Stopping at {min_distance:.2f}m")
     elif min_distance < WARNING_DISTANCE:
         safety_factor = (min_distance - CRITICAL_DISTANCE) / (WARNING_DISTANCE - CRITICAL_DISTANCE)
-        linear_velocity = BASE_SPEED * safety_factor
-        if step_count % 20 == 0:
-            print(f"{robot_name} [SLOWING] {min_distance:.2f}m to {closest_obstacle}")
+        linear_velocity = dwa_v * safety_factor
+        angular_velocity = dwa_w * safety_factor
     else:
-        linear_velocity = BASE_SPEED
+        linear_velocity = dwa_v
+        angular_velocity = dwa_w
+    
+    # UPDATE VELOCITY STATE
+    current_w = angular_velocity
     
     # MOTOR COMMANDS
     wheel_velocity = linear_velocity / WHEEL_RADIUS
-    left_velocity = wheel_velocity - angular_velocity_command
-    right_velocity = wheel_velocity + angular_velocity_command
+    left_velocity = wheel_velocity - angular_velocity
+    right_velocity = wheel_velocity + angular_velocity
     
     front_left_motor.setVelocity(left_velocity)
     back_left_motor.setVelocity(left_velocity)
