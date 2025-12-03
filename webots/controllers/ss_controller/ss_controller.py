@@ -44,14 +44,14 @@ MAX_LINEAR_ACCEL = 2.0
 MAX_ANGULAR_ACCEL = 3.0
 MAX_ANGULAR_VELOCITY = 2.0
 
+# ROTATION CONSTANTS
+ROTATION_THRESHOLD = 0.4   # 23 degrees
+ROTATION_TOLERANCE = 0.15  # 9 degrees
+ROTATION_SPEED = 1.2       # rad/s
+
 # SAFETY CONSTANTS
 CRITICAL_DISTANCE = 1.0
 WARNING_DISTANCE = 2.0
-
-# STUCK DETECTION CONSTANTS
-STUCK_TIME_THRESHOLD = 5.0
-STUCK_DISTANCE_THRESHOLD = 0.3
-REVERSE_DISTANCE = 3.0
 
 # DWA PARAMETERS
 DWA_DT = 0.3
@@ -109,6 +109,70 @@ def find_node_by_name(supervisor, name):
             if result is not None:
                 return result
     return None
+
+def normalize_angle(angle):
+    """Normalize angle to [-pi, pi]"""
+    while angle > math.pi:
+        angle -= 2.0 * math.pi
+    while angle < -math.pi:
+        angle += 2.0 * math.pi
+    return angle
+
+def rotate_to_angle(target_angle, tolerance=0.15, timeout=15.0):
+    """
+    Blocking function: rotate in place until aligned with target angle
+    Returns when angle difference < tolerance or timeout
+    """
+    start_time = robot.getTime()
+    consecutive_aligned_count = 0
+    required_aligned_steps = 3
+    
+    while robot.step(timestep) != -1:
+        current_time = robot.getTime()
+        
+        if current_time - start_time > timeout:
+            print(f"{robot_name}: Rotation timeout after {timeout}s")
+            break
+        
+        compass_values = compass.getValues()
+        current_heading = math.atan2(compass_values[1], compass_values[0])
+        
+        angle_diff = normalize_angle(target_angle - current_heading)
+        
+        if abs(angle_diff) < tolerance:
+            consecutive_aligned_count += 1
+            if consecutive_aligned_count >= required_aligned_steps:
+                front_left_motor.setVelocity(0.0)
+                back_left_motor.setVelocity(0.0)
+                front_right_motor.setVelocity(0.0)
+                back_right_motor.setVelocity(0.0)
+                print(f"{robot_name}: Rotation complete (error: {math.degrees(angle_diff):.1f}°)")
+                return True
+        else:
+            consecutive_aligned_count = 0
+        
+        base_rotation_speed = ROTATION_SPEED
+        
+        if abs(angle_diff) < 0.8:
+            slowdown_factor = max(abs(angle_diff) / 0.8, 0.3)
+            rotation_speed = base_rotation_speed * slowdown_factor
+        else:
+            rotation_speed = base_rotation_speed
+        
+        if angle_diff > 0:
+            angular_velocity = rotation_speed
+        else:
+            angular_velocity = -rotation_speed
+        
+        left_velocity = -angular_velocity
+        right_velocity = angular_velocity
+        
+        front_left_motor.setVelocity(left_velocity)
+        back_left_motor.setVelocity(left_velocity)
+        front_right_motor.setVelocity(right_velocity)
+        back_right_motor.setVelocity(right_velocity)
+    
+    return False
 
 def predict_trajectory(x, y, theta, v, w, dt, steps):
     trajectory = [(x, y, theta)]
@@ -205,12 +269,6 @@ def dynamic_window_approach(current_x, current_y, current_theta, current_v, curr
     
     return best_v, best_w, best_score
 
-def find_escape_waypoint(current_x, current_y, current_heading, reverse_distance):
-    """Calculate escape waypoint behind AGV for reversing"""
-    escape_x = current_x - reverse_distance * math.cos(current_heading)
-    escape_y = current_y - reverse_distance * math.sin(current_heading)
-    return escape_x, escape_y
-
 # STATE INITIALIZATION
 rack_nodes_cache = {}
 wall_static_cache = {}
@@ -228,14 +286,6 @@ path_planner = None
 waypoint_path = None
 current_waypoint_index = 0
 path_initialized = False
-
-# STUCK DETECTION INITIALIZATION
-stuck_timer = 0.0
-stuck_position_x = None
-stuck_position_y = None
-is_reversing = False
-reverse_target_x = None
-reverse_target_y = None
 
 # MAIN CONTROL LOOP
 while robot.step(timestep) != -1:
@@ -283,12 +333,9 @@ while robot.step(timestep) != -1:
         
         if waypoint_path:
             goal_x, goal_y = waypoint_path[-1]
-            first_wp_x, first_wp_y = waypoint_path[0]
             print(f"{robot_name}: ({current_x:.1f}, {current_y:.1f}) → ({goal_x:.1f}, {goal_y:.1f})")
             current_waypoint_index = 0
             path_initialized = True
-            stuck_position_x = current_x
-            stuck_position_y = current_y
         else:
             print(f"{robot_name}: PATH PLANNING FAILED")
             path_initialized = True
@@ -316,16 +363,43 @@ while robot.step(timestep) != -1:
         continue
     
     # GET CURRENT TARGET WAYPOINT
-    if is_reversing:
-        target_waypoint_x = reverse_target_x
-        target_waypoint_y = reverse_target_y
-    else:
-        target_waypoint_x, target_waypoint_y = waypoint_path[current_waypoint_index]
+    target_waypoint_x, target_waypoint_y = waypoint_path[current_waypoint_index]
+    
+    # CALCULATE ANGLE TO WAYPOINT
+    delta_x = target_waypoint_x - current_x
+    delta_y = target_waypoint_y - current_y
+    distance_to_waypoint = math.sqrt(delta_x * delta_x + delta_y * delta_y)
+    angle_to_waypoint = math.atan2(delta_y, delta_x)
+    angle_diff = normalize_angle(angle_to_waypoint - current_heading)
+    
+    # WAYPOINT CHECK
+    if distance_to_waypoint < WAYPOINT_THRESHOLD:
+        current_waypoint_index += 1
+        
+        if current_waypoint_index >= len(waypoint_path):
+            aisle_name, position_index = waypoint_goals[robot_name]
+            print(f"{robot_name}: ✓ ARRIVED at {aisle_name}[{position_index}]")
+            front_right_motor.setVelocity(0.0)
+            front_left_motor.setVelocity(0.0)
+            back_right_motor.setVelocity(0.0)
+            back_left_motor.setVelocity(0.0)
+            continue
+        else:
+            target_waypoint_x, target_waypoint_y = waypoint_path[current_waypoint_index]
+            delta_x = target_waypoint_x - current_x
+            delta_y = target_waypoint_y - current_y
+            distance_to_waypoint = math.sqrt(delta_x * delta_x + delta_y * delta_y)
+            angle_to_waypoint = math.atan2(delta_y, delta_x)
+            angle_diff = normalize_angle(angle_to_waypoint - current_heading)
+    
+    # CHECK IF ROTATION NEEDED (BLOCKING)
+    if abs(angle_diff) > ROTATION_THRESHOLD:
+        rotate_to_angle(angle_to_waypoint, ROTATION_TOLERANCE)
+        continue
     
     # BUILD OBSTACLE LIST
     obstacles = []
     
-    # Add other AGVs as obstacles
     for i in range(1, 16):
         agv_name = f"AGV_{i}"
         if agv_name == robot_name:
@@ -336,7 +410,6 @@ while robot.step(timestep) != -1:
             position = agv_node.getPosition()
             obstacles.append({'x': position[0], 'y': position[1]})
     
-    # Add racks as obstacles
     for rack_name, rack_data in rack_nodes_cache.items():
         rack_node = rack_data['node']
         rack_position = rack_node.getPosition()
@@ -353,7 +426,6 @@ while robot.step(timestep) != -1:
         
         obstacles.append({'x': closest_x, 'y': closest_y})
     
-    # Add walls as obstacles
     for wall_name, wall_data in wall_static_cache.items():
         closest_x, closest_y = closest_point_on_rectangle(
             current_x, current_y,
@@ -364,65 +436,13 @@ while robot.step(timestep) != -1:
         
         obstacles.append({'x': closest_x, 'y': closest_y})
     
-    # WAYPOINT CHECK
-    delta_x = target_waypoint_x - current_x
-    delta_y = target_waypoint_y - current_y
-    distance_to_waypoint = math.sqrt(delta_x * delta_x + delta_y * delta_y)
-    
-    # STUCK DETECTION
-    if stuck_position_x is not None:
-        distance_moved = math.sqrt((current_x - stuck_position_x)**2 + (current_y - stuck_position_y)**2)
-        
-        if distance_moved < STUCK_DISTANCE_THRESHOLD:
-            stuck_timer += delta_time
-            
-            if stuck_timer > STUCK_TIME_THRESHOLD and not is_reversing:
-                print(f"{robot_name}: STUCK! Reversing to escape...")
-                is_reversing = True
-                reverse_target_x, reverse_target_y = find_escape_waypoint(
-                    current_x, current_y, current_heading, REVERSE_DISTANCE
-                )
-                stuck_timer = 0.0
-        else:
-            stuck_timer = 0.0
-            stuck_position_x = current_x
-            stuck_position_y = current_y
-    
-    # CHECK IF REACHED WAYPOINT
-    if distance_to_waypoint < WAYPOINT_THRESHOLD:
-        if is_reversing:
-            print(f"{robot_name}: Escaped! Resuming forward navigation")
-            is_reversing = False
-            reverse_target_x = None
-            reverse_target_y = None
-            stuck_timer = 0.0
-            stuck_position_x = current_x
-            stuck_position_y = current_y
-        else:
-            current_waypoint_index += 1
-            
-            if current_waypoint_index >= len(waypoint_path):
-                aisle_name, position_index = waypoint_goals[robot_name]
-                print(f"{robot_name}: ✓ ARRIVED at {aisle_name}[{position_index}]")
-                front_right_motor.setVelocity(0.0)
-                front_left_motor.setVelocity(0.0)
-                back_right_motor.setVelocity(0.0)
-                back_left_motor.setVelocity(0.0)
-                continue
-            else:
-                target_waypoint_x, target_waypoint_y = waypoint_path[current_waypoint_index]
-                stuck_position_x = current_x
-                stuck_position_y = current_y
-                stuck_timer = 0.0
-    
-    # ADAPTIVE SPEED SCALING
+    # NAVIGATION MODE
     if distance_to_waypoint < SLOWDOWN_DISTANCE:
         speed_scale = distance_to_waypoint / SLOWDOWN_DISTANCE
         adaptive_max_speed = BASE_SPEED * max(speed_scale, 0.5)
     else:
         adaptive_max_speed = BASE_SPEED
     
-    # DYNAMIC WINDOW APPROACH
     dwa_v, dwa_w, dwa_score = dynamic_window_approach(
         current_x, current_y, current_heading, current_v, current_w,
         target_waypoint_x, target_waypoint_y, obstacles,
@@ -433,13 +453,7 @@ while robot.step(timestep) != -1:
         DWA_ALPHA, DWA_BETA, DWA_GAMMA
     )
     
-    # REVERSE MODE: Invert velocity
-    if is_reversing:
-        dwa_v = -abs(dwa_v)
-    
-    # SAFETY SHIELD OVERRIDE
     min_distance = math.inf
-    
     for obs in obstacles:
         dx = obs['x'] - current_x
         dy = obs['y'] - current_y
@@ -460,7 +474,6 @@ while robot.step(timestep) != -1:
     
     current_w = angular_velocity
     
-    # MOTOR COMMANDS
     wheel_velocity = linear_velocity / WHEEL_RADIUS
     left_velocity = wheel_velocity - angular_velocity
     right_velocity = wheel_velocity + angular_velocity
