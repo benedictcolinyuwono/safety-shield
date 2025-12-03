@@ -11,6 +11,7 @@ from shield.supervisor import supervise_commands, PASS, GUARDED, EMERGENCY
 from geometry_utils import closest_point_on_rectangle
 from waypoints import warehouse_waypoints
 from path_planner import get_path_planner
+from obstacles import rack_obstacles, wall_obstacles
 
 # ROBOT INITIALIZATION
 robot = Supervisor()
@@ -47,6 +48,11 @@ MAX_ANGULAR_VELOCITY = 2.0
 CRITICAL_DISTANCE = 1.0
 WARNING_DISTANCE = 2.0
 
+# STUCK DETECTION CONSTANTS
+STUCK_TIME_THRESHOLD = 5.0
+STUCK_DISTANCE_THRESHOLD = 0.3
+REVERSE_DISTANCE = 3.0
+
 # DWA PARAMETERS
 DWA_DT = 0.3
 DWA_PREDICT_TIME = 1.0
@@ -74,43 +80,6 @@ waypoint_goals = {
     'AGV_14': ('row_a_aisle_15', 6),
     'AGV_15': ('bottom_aisle_6', 5),
 }
-
-# OBSTACLE DEFINITIONS
-rack_definitions = [
-    ("FG_Top_RackRowA_1", 4.35, 37.0), ("FG_Top_RackRowA_2", 8.7, 37.0),
-    ("FG_Top_RackRowA_3", 8.7, 37.0), ("FG_Top_RackRowA_4", 8.7, 37.0),
-    ("FG_Top_RackRowA_5", 8.7, 37.0), ("FG_Top_RackRowA_6", 8.7, 37.0),
-    ("FG_Top_RackRowA_7", 8.7, 37.0), ("FG_Top_RackRowA_8", 8.7, 37.0),
-    ("FG_Top_RackRowA_9", 8.7, 37.0), ("FG_Top_RackRowA_10", 8.7, 37.0),
-    ("FG_Top_RackRowA_11", 8.7, 37.0), ("FG_Top_RackRowA_12", 8.7, 37.0),
-    ("FG_Top_RackRowA_13", 8.7, 37.0), ("FG_Top_RackRowA_14", 8.7, 37.0),
-    ("FG_Top_RackRowA_15", 8.7, 37.0), ("FG_Top_RackRowA_16", 8.7, 37.0),
-    ("FG_Top_RackRowB_1", 4.35, 31.7), ("FG_Top_RackRowB_2", 8.7, 31.7),
-    ("FG_Top_RackRowB_3", 8.7, 31.7), ("FG_Top_RackRowB_4", 8.7, 31.7),
-    ("FG_Top_RackRowB_5", 8.7, 31.7), ("FG_Top_RackRowB_6", 8.7, 31.7),
-    ("FG_Top_RackRowB_7", 8.7, 31.7), ("FG_Top_RackRowB_8", 8.7, 31.7),
-    ("FG_Top_RackRowB_9", 8.7, 31.7), ("FG_Top_RackRowB_10", 8.7, 31.7),
-    ("FG_Top_RackRowB_11", 8.7, 31.7), ("FG_Top_RackRowB_12", 8.7, 31.7),
-    ("FG_Top_RackRowB_13", 8.7, 31.7), ("FG_Top_RackRowR_1", 11.3, 15.3),
-    ("FG_Middle_RackRow_1", 8.7, 37.0), ("FG_Middle_RackRow_2", 8.7, 37.0),
-    ("FG_Middle_RackRow_3", 8.7, 37.0), ("FG_Middle_RackRow_4", 8.7, 37.0),
-    ("FG_Middle_RackRow_5", 8.7, 37.0), ("FG_Middle_RackRow_6", 8.7, 37.0),
-    ("FG_Middle_RackRow_7", 8.7, 37.0), ("FG_Middle_RackRow_8", 8.7, 37.0),
-    ("FG_Middle_RackRow_9", 8.7, 37.0), ("FG_Middle_RackRow_10", 8.7, 37.0),
-    ("FG_Middle_RackRow_11", 8.7, 37.0), ("FG_Middle_RackRow_12", 8.7, 37.0),
-    ("FG_Middle_RackRow_13", 8.7, 37.0), ("FG_Middle_RackRow_14", 8.7, 37.0),
-    ("FG_Middle_RackRowR_1", 11.3, 15.3),
-    ("FG_Bottom_RackRow_1", 8.7, 31.7), ("FG_Bottom_RackRow_2", 8.7, 31.7),
-    ("FG_Bottom_RackRow_3", 8.7, 31.7), ("FG_Bottom_RackRow_4", 8.7, 31.7),
-    ("FG_Bottom_RackRow_5", 8.7, 31.7), ("FG_Bottom_RackRow_6", 8.7, 31.7),
-    ("FG_Bottom_RackRow_7", 8.7, 31.7), ("FG_Bottom_RackRow_8", 8.7, 31.7),
-    ("FG_Bottom_RackRowR_1", 11.3, 15.3),
-    ("FG_PalletizingConveyors_1A", 30.1, 2.17),
-    ("FG_PalletizingConveyors_1B", 2.17, 2.24),
-    ("FG_PalletizingConveyors_2A", 32.19, 2.17),
-    ("FG_PalletizingConveyors_2B", 2.17, 2.42),
-    ("FG_PalletizingConveyors_3", 32.1, 2.17),
-]
 
 def find_node_by_name(supervisor, name):
     root = supervisor.getRoot()
@@ -236,9 +205,17 @@ def dynamic_window_approach(current_x, current_y, current_theta, current_v, curr
     
     return best_v, best_w, best_score
 
+def find_escape_waypoint(current_x, current_y, current_heading, reverse_distance):
+    """Calculate escape waypoint behind AGV for reversing"""
+    escape_x = current_x - reverse_distance * math.cos(current_heading)
+    escape_y = current_y - reverse_distance * math.sin(current_heading)
+    return escape_x, escape_y
+
 # STATE INITIALIZATION
 rack_nodes_cache = {}
+wall_static_cache = {}
 racks_initialized = False
+walls_initialized = False
 previous_x = None
 previous_y = None
 previous_time = 0.0
@@ -252,14 +229,22 @@ waypoint_path = None
 current_waypoint_index = 0
 path_initialized = False
 
+# STUCK DETECTION INITIALIZATION
+stuck_timer = 0.0
+stuck_position_x = None
+stuck_position_y = None
+is_reversing = False
+reverse_target_x = None
+reverse_target_y = None
+
 # MAIN CONTROL LOOP
 while robot.step(timestep) != -1:
     step_count += 1
     
     # RACK NODE INITIALIZATION
     if not racks_initialized:
-        print(f"{robot_name} initializing rack detection...")
-        for rack_name, rack_width, rack_length in rack_definitions:
+        for rack_data in rack_obstacles:
+            rack_name, _, _, rack_width, rack_length = rack_data
             rack_node = find_node_by_name(robot, rack_name)
             if rack_node is not None:
                 rack_nodes_cache[rack_name] = {
@@ -267,8 +252,19 @@ while robot.step(timestep) != -1:
                     'width': rack_width,
                     'length': rack_length
                 }
-        print(f"{robot_name} found {len(rack_nodes_cache)} racks")
         racks_initialized = True
+    
+    # WALL STATIC INITIALIZATION
+    if not walls_initialized:
+        for wall_data in wall_obstacles:
+            wall_name, wall_x, wall_y, wall_width, wall_length = wall_data
+            wall_static_cache[wall_name] = {
+                'x': wall_x,
+                'y': wall_y,
+                'width': wall_width,
+                'length': wall_length
+            }
+        walls_initialized = True
     
     # READ CURRENT STATE
     gps_values = gps.getValues()
@@ -278,21 +274,23 @@ while robot.step(timestep) != -1:
     compass_values = compass.getValues()
     current_heading = math.atan2(compass_values[1], compass_values[0])
     
-    # PATH PLANNING INITIALIZATION (once position is known)
+    # PATH PLANNING INITIALIZATION
     if not path_initialized and previous_x is not None:
-        print(f"{robot_name} initializing path planner...")
         path_planner = get_path_planner()
         
         aisle_name, position_index = waypoint_goals[robot_name]
         waypoint_path = path_planner.find_path(current_x, current_y, aisle_name, position_index)
         
         if waypoint_path:
-            print(f"{robot_name} path found with {len(waypoint_path)} waypoints")
-            print(f"{robot_name} navigating: start → {aisle_name}[{position_index}]")
+            goal_x, goal_y = waypoint_path[-1]
+            first_wp_x, first_wp_y = waypoint_path[0]
+            print(f"{robot_name}: ({current_x:.1f}, {current_y:.1f}) → ({goal_x:.1f}, {goal_y:.1f})")
             current_waypoint_index = 0
             path_initialized = True
+            stuck_position_x = current_x
+            stuck_position_y = current_y
         else:
-            print(f"{robot_name} ERROR: No path found!")
+            print(f"{robot_name}: PATH PLANNING FAILED")
             path_initialized = True
             waypoint_path = []
     
@@ -318,11 +316,16 @@ while robot.step(timestep) != -1:
         continue
     
     # GET CURRENT TARGET WAYPOINT
-    target_waypoint_x, target_waypoint_y = waypoint_path[current_waypoint_index]
+    if is_reversing:
+        target_waypoint_x = reverse_target_x
+        target_waypoint_y = reverse_target_y
+    else:
+        target_waypoint_x, target_waypoint_y = waypoint_path[current_waypoint_index]
     
     # BUILD OBSTACLE LIST
     obstacles = []
     
+    # Add other AGVs as obstacles
     for i in range(1, 16):
         agv_name = f"AGV_{i}"
         if agv_name == robot_name:
@@ -333,6 +336,7 @@ while robot.step(timestep) != -1:
             position = agv_node.getPosition()
             obstacles.append({'x': position[0], 'y': position[1]})
     
+    # Add racks as obstacles
     for rack_name, rack_data in rack_nodes_cache.items():
         rack_node = rack_data['node']
         rack_position = rack_node.getPosition()
@@ -349,24 +353,67 @@ while robot.step(timestep) != -1:
         
         obstacles.append({'x': closest_x, 'y': closest_y})
     
+    # Add walls as obstacles
+    for wall_name, wall_data in wall_static_cache.items():
+        closest_x, closest_y = closest_point_on_rectangle(
+            current_x, current_y,
+            wall_data['x'], wall_data['y'],
+            wall_data['width'], wall_data['length'],
+            0.0
+        )
+        
+        obstacles.append({'x': closest_x, 'y': closest_y})
+    
     # WAYPOINT CHECK
     delta_x = target_waypoint_x - current_x
     delta_y = target_waypoint_y - current_y
     distance_to_waypoint = math.sqrt(delta_x * delta_x + delta_y * delta_y)
     
-    if distance_to_waypoint < WAYPOINT_THRESHOLD:
-        current_waypoint_index += 1
+    # STUCK DETECTION
+    if stuck_position_x is not None:
+        distance_moved = math.sqrt((current_x - stuck_position_x)**2 + (current_y - stuck_position_y)**2)
         
-        if current_waypoint_index >= len(waypoint_path):
-            print(f"{robot_name} ✓ REACHED FINAL DESTINATION!")
-            front_right_motor.setVelocity(0.0)
-            front_left_motor.setVelocity(0.0)
-            back_right_motor.setVelocity(0.0)
-            back_left_motor.setVelocity(0.0)
-            continue
+        if distance_moved < STUCK_DISTANCE_THRESHOLD:
+            stuck_timer += delta_time
+            
+            if stuck_timer > STUCK_TIME_THRESHOLD and not is_reversing:
+                print(f"{robot_name}: STUCK! Reversing to escape...")
+                is_reversing = True
+                reverse_target_x, reverse_target_y = find_escape_waypoint(
+                    current_x, current_y, current_heading, REVERSE_DISTANCE
+                )
+                stuck_timer = 0.0
         else:
-            print(f"{robot_name} reached waypoint {current_waypoint_index}/{len(waypoint_path)}")
-            target_waypoint_x, target_waypoint_y = waypoint_path[current_waypoint_index]
+            stuck_timer = 0.0
+            stuck_position_x = current_x
+            stuck_position_y = current_y
+    
+    # CHECK IF REACHED WAYPOINT
+    if distance_to_waypoint < WAYPOINT_THRESHOLD:
+        if is_reversing:
+            print(f"{robot_name}: Escaped! Resuming forward navigation")
+            is_reversing = False
+            reverse_target_x = None
+            reverse_target_y = None
+            stuck_timer = 0.0
+            stuck_position_x = current_x
+            stuck_position_y = current_y
+        else:
+            current_waypoint_index += 1
+            
+            if current_waypoint_index >= len(waypoint_path):
+                aisle_name, position_index = waypoint_goals[robot_name]
+                print(f"{robot_name}: ✓ ARRIVED at {aisle_name}[{position_index}]")
+                front_right_motor.setVelocity(0.0)
+                front_left_motor.setVelocity(0.0)
+                back_right_motor.setVelocity(0.0)
+                back_left_motor.setVelocity(0.0)
+                continue
+            else:
+                target_waypoint_x, target_waypoint_y = waypoint_path[current_waypoint_index]
+                stuck_position_x = current_x
+                stuck_position_y = current_y
+                stuck_timer = 0.0
     
     # ADAPTIVE SPEED SCALING
     if distance_to_waypoint < SLOWDOWN_DISTANCE:
@@ -385,6 +432,10 @@ while robot.step(timestep) != -1:
         MAX_LINEAR_ACCEL, MAX_ANGULAR_ACCEL,
         DWA_ALPHA, DWA_BETA, DWA_GAMMA
     )
+    
+    # REVERSE MODE: Invert velocity
+    if is_reversing:
+        dwa_v = -abs(dwa_v)
     
     # SAFETY SHIELD OVERRIDE
     min_distance = math.inf
